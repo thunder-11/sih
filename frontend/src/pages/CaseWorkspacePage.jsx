@@ -5,6 +5,7 @@ import { useCase } from '../context/CaseContext';
 import { useAuth } from '../context/AuthContext';
 import MoneyTrailVisualizer from '../components/MoneyTrailVisualizer';
 import AnimatedNumber from '../components/AnimatedNumber';
+import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import api from '../lib/api';
 import { errorMessage, items, downloadBase64Pdf } from '../lib/contracts';
 
@@ -100,6 +101,14 @@ export default function CaseWorkspacePage() {
   const [savedCaseLabel, setSavedCaseLabel] = useState('');
   const [savingCase, setSavingCase] = useState(false);
   const [trailRiskScore, setTrailRiskScore] = useState(0);
+
+  // ── Real Investigation Progress Overlay State ──
+  const [overlayActive, setOverlayActive] = useState(false);
+  const [overlayProgress, setOverlayProgress] = useState(0);
+  const [overlayMessage, setOverlayMessage] = useState('');
+  const [overlayTargetWallet, setOverlayTargetWallet] = useState('');
+  const [overlayTargetChain, setOverlayTargetChain] = useState('');
+
   const pollingRef = useRef(null);
 
   // Sync temp flag when active case changes
@@ -181,22 +190,39 @@ export default function CaseWorkspacePage() {
       if (pollCount > MAX_POLLS) {
         clearInterval(pollingRef.current); pollingRef.current = null;
         setTraceStatus('error');
+        setOverlayActive(false);
         setTraceError('Trace timed out. The provider may be unavailable — please try again.');
         return;
       }
       try {
         const res = await api.get(`/api/v1/traces/${traceId}`);
         const state = (res.data?.state || res.data?.status || '').toLowerCase();
+
+        if (res.data?.message) {
+          setOverlayMessage(res.data.message);
+        }
+        if (res.data?.progress_percent != null && res.data.progress_percent > 0) {
+          const mapped = Math.min(88, 25 + Math.round(res.data.progress_percent * 0.63));
+          setOverlayProgress(prev => Math.max(prev, mapped));
+        } else {
+          setOverlayProgress(prev => Math.min(85, prev + 2));
+        }
+
         if (['complete', 'completed', 'done', 'succeeded', 'partial'].includes(state)) {
           clearInterval(pollingRef.current); pollingRef.current = null;
+          setOverlayProgress(92);
+          setOverlayMessage('Trace completed on-chain. Constructing forensic money-trail network…');
           await reloadActiveCase(cid);
           await loadRiskAndAttributions(cid);
           // Don't call reloadCasesList for temp cases — keeps them hidden
           if (!getTempCaseIds().has(cid)) await reloadCasesList();
+          setOverlayProgress(100);
+          setOverlayMessage('Forensic money-trail graph ready.');
           setTraceStatus('complete'); setCurrentHop(0); setIsPlaying(true);
         } else if (['failed', 'error'].includes(state)) {
           clearInterval(pollingRef.current); pollingRef.current = null;
           setTraceStatus('error');
+          setOverlayActive(false);
           setTraceError(res.data?.error_message || res.data?.error || 'Trace failed on the backend.');
         }
         // 'retrying', 'running', 'queued' → keep polling
@@ -212,15 +238,37 @@ export default function CaseWorkspacePage() {
     if (!targetCaseId) return;
     setTraceStatus('starting'); setTraceError(null);
     if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
+
+    const targetAddr = activeCase?.wallets?.[0]?.wallet_address || activeCase?.external_complaint_id || targetCaseId;
+    const targetNet = activeCase?.wallets?.[0]?.chain || 'TRON';
+    setOverlayTargetWallet(targetAddr);
+    setOverlayTargetChain(targetNet);
+    setOverlayActive(true);
+    setOverlayProgress(12);
+    setOverlayMessage('Initializing multi-hop BFS forward trace across blockchain nodes…');
+
     try {
       setTraceStatus('loading');
+      setOverlayProgress(25);
+      setOverlayMessage('Submitting forensic trace job to queue worker…');
       const res = await api.post(`/api/v1/cases/${targetCaseId}/trace`, {}, { headers: { 'Idempotency-Key': crypto.randomUUID() } });
       const traceId = res.data?.trace_id;
       setTraceStatus('polling');
+      setOverlayProgress(35);
+      setOverlayMessage('Traversing transaction hops & exchange deposit records…');
       if (traceId) pollTrace(traceId);
-      else { await reloadActiveCase(); setTraceStatus('complete'); setCurrentHop(0); setIsPlaying(true); }
+      else {
+        setOverlayProgress(92);
+        setOverlayMessage('Constructing money-trail graph…');
+        await reloadActiveCase();
+        await loadRiskAndAttributions();
+        setOverlayProgress(100);
+        setOverlayMessage('Forensic money-trail graph ready.');
+        setTraceStatus('complete'); setCurrentHop(0); setIsPlaying(true);
+      }
     } catch (err) {
       setTraceStatus('error');
+      setOverlayActive(false);
       setTraceError(errorMessage(err, 'Trace failed due to a provider or wallet error'));
     }
   };
@@ -377,11 +425,21 @@ export default function CaseWorkspacePage() {
   const handleTraceNewWallet = async () => {
     const address = walletInput.trim();
     if (!address) { setWalletError('Enter a wallet address to trace.'); return; }
+    const detectedChain = walletChain || autoDetectChain(address) || 'TRON';
     setWalletError(''); setWalletSubmitting(true);
     setTraceStatus('starting');
+
+    setOverlayTargetWallet(address);
+    setOverlayTargetChain(detectedChain);
+    setOverlayActive(true);
+    setOverlayProgress(10);
+    setOverlayMessage(`Validating target wallet address on-chain (${detectedChain})...`);
+
     try {
       await api.post('/api/v1/wallets/validate', { address, chain: walletChain || null });
       setTraceStatus('loading');
+      setOverlayProgress(25);
+      setOverlayMessage('Address validated. Dispatching automated multi-hop forensic trace...');
       // Use a TEMP- prefix so we can identify and hide these from the cases list
       const tempId = `TEMP-${address.substring(0, 8)}-${Date.now()}`;
       const res = await api.post('/api/v1/complaints', {
@@ -401,17 +459,24 @@ export default function CaseWorkspacePage() {
       selectCase(newCaseId);  // load case data without reloading case list
       setWalletInput(''); setWalletChain('');
       setTraceStatus('polling');
+      setOverlayProgress(35);
+      setOverlayMessage('Tracing forward transaction hops & exchange deposit records...');
       if (traceId) {
         pollTrace(traceId, newCaseId);
       } else {
+        setOverlayProgress(92);
+        setOverlayMessage('Constructing money-trail graph…');
         await reloadActiveCase(newCaseId);
         await loadRiskAndAttributions(newCaseId);
+        setOverlayProgress(100);
+        setOverlayMessage('Forensic money-trail graph ready.');
         setTraceStatus('complete'); setCurrentHop(0); setIsPlaying(true);
       }
       navigate(`/money-trail?case=${newCaseId}`);
     } catch (err) {
       setWalletError(errorMessage(err, 'Wallet trace failed to start.'));
       setTraceStatus('idle');
+      setOverlayActive(false);
     } finally {
       setWalletSubmitting(false);
     }
@@ -448,7 +513,18 @@ export default function CaseWorkspacePage() {
   };
 
   return (
-    <motion.div className="workstation-container" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+    <LoadingOverlay
+      active={overlayActive}
+      progress={overlayProgress}
+      stageMessage={overlayMessage}
+      walletAddress={overlayTargetWallet}
+      chain={overlayTargetChain}
+      isError={!!traceError || !!walletError}
+      onComplete={() => {
+        setOverlayActive(false);
+      }}
+    >
+      <motion.div className="workstation-container" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       {/* ── Command Bar ──────────────────────────────────────────────── */}
       <div className="workstation-command-bar">
         <div className="command-bar-left">
@@ -949,5 +1025,6 @@ export default function CaseWorkspacePage() {
         </div>
       )}
     </motion.div>
+    </LoadingOverlay>
   );
 }

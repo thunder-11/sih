@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.providers.registry import provider_capabilities
 from app.core.errors import ApplicationError
-from app.persistence.models import AnalysisRun, BackgroundJob, CaseAccessGrant, CaseAttachment, CaseEvent, CaseNote, ReportEvent
+from app.persistence.models import AnalysisRun, AnalysisRunEvent, BackgroundJob, CaseAccessGrant, CaseAttachment, CaseEvent, CaseNote, ReportEvent
 from app.repositories.phase2 import DurableJobRepository
 from app.repositories.phase3 import WorkflowRepository, canonical_digest
 from app.schemas.phase3 import AttachmentMetadataCreate, CaseAccessGrantCreate, CaseNoteCreate, CaseUpdate, IngestionRequest, ReportEventCorrection, WalletValidationRequest
@@ -194,9 +194,14 @@ def trace_status(trace_id: str, db: Session = Depends(get_db), user: User = Depe
     get_accessible_case(db, user, run.case_id)
     job = db.query(BackgroundJob).filter(BackgroundJob.case_id == run.case_id,
                                          BackgroundJob.operation == "trace.run").order_by(BackgroundJob.created_at.desc()).first()
+    latest_event = db.query(AnalysisRunEvent).filter(AnalysisRunEvent.run_id == run.id).order_by(AnalysisRunEvent.sequence.desc()).first()
+    is_done = (job and job.state in {"complete", "completed", "partial"}) or run.state in {"complete", "partial"}
+    progress_val = 100 if is_done else (latest_event.progress_percent if latest_event else 0)
     return {"id": run.id, "case_id": run.case_id, "state": job.state if job else run.state,
             "stage": run.stage, "requested_at": run.requested_at.isoformat(),
             "job_id": job.id if job else None, "warnings": [],
+            "progress_percent": progress_val,
+            "message": latest_event.message if latest_event else None,
             "error": job.last_error_code if job else run.error_code}
 
 

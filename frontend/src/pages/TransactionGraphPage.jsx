@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCase } from '../context/CaseContext';
 import { ForensicGraph } from '../ForensicGraph';
 import AnimatedNumber from '../components/AnimatedNumber';
+import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import api from '../lib/api';
 
 // ── Data Transform: backend graph → ForensicGraph format ───────
@@ -218,12 +219,20 @@ export default function TransactionGraphPage() {
   const displayRiskTier = (caseRiskData?.tier || activeCase?.risk_tier || 'ASSESSED').toUpperCase();
 
   return (
-    <motion.div
-      style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+    <LoadingOverlay
+      active={loadingCase}
+      progress={loadingCase ? 75 : 100}
+      stageMessage="Rendering canvas forensic transaction graph & risk vectors…"
+      walletAddress={activeCase?.wallets?.[0]?.wallet_address || activeCase?.external_complaint_id || ''}
+      chain={activeCase?.wallets?.[0]?.chain || 'TRON'}
+      isError={!!caseError}
     >
+      <motion.div
+        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
       <div className="page-header" style={{ margin: 0 }}>
         <div>
           <h1>🕸️ Forensic Transaction Graph</h1>
@@ -438,5 +447,6 @@ export default function TransactionGraphPage() {
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>Drag to pan · Scroll to zoom · Click node to inspect</span>
       </div>
     </motion.div>
+    </LoadingOverlay>
   );
 }
