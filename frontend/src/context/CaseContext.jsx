@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 const CaseContext = createContext();
 
 export function CaseProvider({ children }) {
-  const [activeCaseId, setActiveCaseId] = useState(() => localStorage.getItem('argus_active_case_id') || '');
+  const [activeCaseId, setActiveCaseId] = useState('');
   const [activeCase, setActiveCase] = useState(null);
   const [activeGraph, setActiveGraph] = useState({ nodes: [], edges: [] });
   const [casesList, setCasesList] = useState([]);
@@ -23,7 +23,12 @@ export function CaseProvider({ children }) {
   const requestSequence = useRef(0);
 
   const loadCaseData = useCallback(async (cId) => {
-    if (!user || !cId) return;
+    if (!user || !cId) {
+      setActiveCase(null);
+      setActiveGraph(normalizeGraph(null));
+      setGraphState('empty');
+      return;
+    }
     const sequence = ++requestSequence.current;
     setLoadingCase(true);
     setCaseError('');
@@ -58,8 +63,11 @@ export function CaseProvider({ children }) {
 
   useEffect(() => {
     if (activeCaseId) {
-      localStorage.setItem('argus_active_case_id', activeCaseId);
       loadCaseData(activeCaseId);
+    } else {
+      setActiveCase(null);
+      setActiveGraph(normalizeGraph(null));
+      setGraphState('empty');
     }
   }, [activeCaseId, loadCaseData]);
 
@@ -69,11 +77,10 @@ export function CaseProvider({ children }) {
       const res = await api.get('/api/v1/cases', { params: { page_size: 100 } });
       const list = items(res.data, 'cases');
       setCasesList(list);
-      if (!activeCaseId && list[0]) setActiveCaseId(list[0].id);
     } catch (error) {
       setCaseError(errorMessage(error, 'Cases are unavailable.'));
     }
-  }, [user, activeCaseId]);
+  }, [user]);
 
   useEffect(() => {
     if (!user) {

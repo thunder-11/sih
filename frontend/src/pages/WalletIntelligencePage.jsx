@@ -6,7 +6,7 @@ import { items, errorMessage, formatAmount } from '../lib/contracts';
 
 export default function WalletIntelligencePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { activeCaseId, activeCase } = useCase();
+  const { activeCaseId, casesList, selectCase } = useCase();
   const [address, setAddress] = useState(searchParams.get('address') || '');
   const [chain, setChain] = useState(searchParams.get('chain') || '');
   const [transfers, setTransfers] = useState([]);
@@ -14,17 +14,21 @@ export default function WalletIntelligencePage() {
   const [state, setState] = useState('idle');
   const [message, setMessage] = useState('');
 
-  const inspectWallet = async (nextAddress = address, nextChain = chain) => {
-    if (!activeCaseId || !nextAddress || !nextChain) {
-      setMessage('Select an active case and provide both a wallet address and network.');
+  const inspectWallet = async (nextAddress = address, nextChain = chain, targetCase = activeCaseId) => {
+    if (!targetCase) {
+      setMessage('Please select an active case first to scope wallet intelligence evidence.');
+      return;
+    }
+    if (!nextAddress || !nextChain) {
+      setMessage('Please provide both a wallet address and network.');
       return;
     }
     setState('loading'); setMessage('');
     try {
       await api.post('/api/v1/wallets/validate', { address: nextAddress, chain: nextChain });
       const [txResponse, riskResponse] = await Promise.all([
-        api.get(`/api/v1/cases/${activeCaseId}/transactions`, { params: { temporal_view: 'all', chain: nextChain } }),
-        api.get(`/api/v1/cases/${activeCaseId}/risk`).catch(() => ({ data: null })),
+        api.get(`/api/v1/cases/${targetCase}/transactions`, { params: { temporal_view: 'all', chain: nextChain } }),
+        api.get(`/api/v1/cases/${targetCase}/risk`).catch(() => ({ data: null })),
       ]);
       const all = items(txResponse.data, 'transactions');
       setTransfers(all.filter(tx => tx.source_address === nextAddress || tx.target_address === nextAddress));
@@ -39,7 +43,7 @@ export default function WalletIntelligencePage() {
   useEffect(() => {
     const initialAddress = searchParams.get('address');
     const initialChain = searchParams.get('chain');
-    if (initialAddress && initialChain && activeCaseId) inspectWallet(initialAddress, initialChain);
+    if (initialAddress && initialChain && activeCaseId) inspectWallet(initialAddress, initialChain, activeCaseId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCaseId]);
 
@@ -47,7 +51,11 @@ export default function WalletIntelligencePage() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="page-header" style={{ margin: 0 }}><div><h1>🔎 Wallet & Contract Intelligence Dossier</h1><p className="subtitle">Case-scoped on-chain evidence and independently labeled risk outputs</p></div></div>
       <div className="card" style={{ padding: '16px 20px' }}>
-        <form onSubmit={event => { event.preventDefault(); inspectWallet(); }} style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <form onSubmit={event => { event.preventDefault(); inspectWallet(); }} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <select className="form-select" value={activeCaseId || ''} onChange={e => selectCase(e.target.value)} style={{ width: 220 }}>
+            <option value="">-- Select Case Context --</option>
+            {casesList.map(c => <option key={c.id} value={c.id}>{c.external_complaint_id} — {c.fraud_typology}</option>)}
+          </select>
           <input className="form-input mono" value={address} onChange={e => setAddress(e.target.value)} placeholder="Wallet address" style={{ flex: 1, minWidth: 240 }} />
           <select className="form-select" value={chain} onChange={e => setChain(e.target.value)} style={{ width: 170 }}>
             <option value="">Select network</option><option value="BTC">Bitcoin</option><option value="ETH">Ethereum</option><option value="TRON">TRON</option><option value="BSC">BSC</option><option value="POLYGON">Polygon</option>

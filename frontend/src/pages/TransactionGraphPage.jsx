@@ -318,13 +318,19 @@ export default function TransactionGraphPage() {
               </span>
             </div>
           )}
-          <select className="form-select" value={activeCaseId || ''} onChange={e => selectCase(e.target.value)}
+          <select className="form-select" value={activeCaseId || ''} onChange={e => {
+              const val = e.target.value;
+              selectCase(val);
+              if (val) navigate(`/graph?case=${val}`);
+              else navigate('/graph');
+            }}
             style={{ fontSize: '0.8rem', padding: '5px 10px', minWidth: 220, fontWeight: 700 }}>
+            <option value="">-- Select an Investigation Case --</option>
             {casesList.map(c => (
               <option key={c.id} value={c.id}>{c.external_complaint_id} — {c.reported_loss_amount?.toLocaleString()} {c.loss_currency} {c.risk_score != null ? `(Risk: ${c.risk_score})` : ''}</option>
             ))}
           </select>
-          <button className="btn btn-outline" onClick={() => navigate('/money-trail')}>💸 Money Trail View</button>
+          <button className="btn btn-outline" onClick={() => navigate(activeCaseId ? `/money-trail?case=${activeCaseId}` : '/money-trail')}>💸 Money Trail View</button>
         </div>
       </div>
 
@@ -440,9 +446,21 @@ export default function TransactionGraphPage() {
           </button>
 
           {forensicData.nodes.length === 0 && (
-            <div className="loading-overlay" style={{ height: '100%', position: 'absolute', inset: 0 }}>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>No graph nodes match the active filters — run a trace first, or widen the filter criteria.</p>
-              <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => navigate('/money-trail')}>💸 Go to Money Trail →</button>
+            <div className="loading-overlay" style={{ height: '100%', position: 'absolute', inset: 0, padding: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              {!activeCaseId ? (
+                <>
+                  <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🕸️</div>
+                  <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>No Investigation Case Selected</h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: 460, textAlign: 'center', marginTop: 8 }}>
+                    Please select a case from the <strong>CASE</strong> dropdown above to load and explore its forensic transaction graph.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>No graph nodes match the active filters — run a trace first, or widen the filter criteria.</p>
+                  <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => navigate(`/money-trail?case=${activeCaseId}`)}>💸 Go to Money Trail →</button>
+                </>
+              )}
             </div>
           )}
 

@@ -550,12 +550,18 @@ export default function CaseWorkspacePage() {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>CASE:</span>
               <select className="form-select" value={targetCaseId || ''}
                 onChange={e => {
-                  selectCase(e.target.value);
-                  setIsTempInvestigation(getTempCaseIds().has(e.target.value));
+                  const val = e.target.value;
+                  selectCase(val);
+                  setIsTempInvestigation(val ? getTempCaseIds().has(val) : false);
                   setTraceStatus('idle'); setTraceError(null); setCurrentHop(0); setSelectedNodeId(null);
-                  navigate(`/money-trail?case=${e.target.value}`);
+                  if (val) {
+                    navigate(`/money-trail?case=${val}`);
+                  } else {
+                    navigate('/money-trail');
+                  }
                 }}
                 style={{ padding: '5px 10px', fontSize: '0.8rem', minWidth: 240, fontWeight: 700 }}>
+                <option value="">-- Select an Investigation Case --</option>
                 {visibleCasesList.map(c => (
                   <option key={c.id} value={c.id}>{c.external_complaint_id} — {TYPOLOGY_LABELS[c.fraud_typology] || c.fraud_typology} ({c.reported_loss_amount?.toLocaleString()})</option>
                 ))}
@@ -564,14 +570,14 @@ export default function CaseWorkspacePage() {
           )}
           <span className={`status-beacon ${hasAttribution ? 'attributed' : traceStatus === 'polling' || traceStatus === 'loading' ? 'active' : 'idle'}`}>
             <span className={`status-dot ${traceStatus === 'polling' ? 'pulse' : ''}`} style={{ background: hasAttribution ? 'var(--accent-gold)' : traceStatus === 'polling' ? 'var(--accent-copper)' : 'var(--text-muted)' }}></span>
-            {hasAttribution ? 'ATTRIBUTION CONFIRMED' : traceStatus === 'polling' ? 'TRACING HOPS...' : isTempInvestigation ? 'TEMP INVESTIGATION' : 'READY FOR TRACE'}
+            {hasAttribution ? 'ATTRIBUTION CONFIRMED' : traceStatus === 'polling' ? 'TRACING HOPS...' : isTempInvestigation ? 'TEMP INVESTIGATION' : targetCaseId ? 'READY FOR TRACE' : 'NO CASE SELECTED'}
           </span>
         </div>
         <div className="command-bar-actions">
           <button className="btn btn-outline" onClick={handleRunAnalytics} disabled={analyzing || !targetCaseId}>
             {analyzing ? '⏳ Analyzing...' : '🧮 Run Deterministic Analytics'}
           </button>
-          <button className="btn btn-outline" onClick={() => navigate(`/graph?case=${targetCaseId}`)}>🕸️ Switch to Graph View</button>
+          <button className="btn btn-outline" onClick={() => navigate(targetCaseId ? `/graph?case=${targetCaseId}` : '/graph')}>🕸️ Switch to Graph View</button>
           <button className={`btn ${traceStatus === 'error' ? 'btn-danger' : 'btn-primary'}`} onClick={handleRunTrace}
             disabled={traceStatus === 'starting' || traceStatus === 'loading' || traceStatus === 'polling' || !targetCaseId}>
             {getTraceButtonLabel()}
@@ -629,8 +635,16 @@ export default function CaseWorkspacePage() {
       )}
 
       {!targetCaseId && (
-        <div className="card" style={{ padding: 30, textAlign: 'center' }}>
-          No case selected. <button className="btn btn-primary" onClick={() => navigate('/new-case')} style={{ marginLeft: 8 }}>Create a new case</button>
+        <div className="card" style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ fontSize: '3rem' }}>📁</div>
+          <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.2rem' }}>No Investigation Case Selected</h3>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: 480, margin: 0, fontSize: '0.88rem', lineHeight: 1.5 }}>
+            Select an existing case from the <strong>CASE</strong> dropdown above to inspect its forensic money trail, or paste any wallet address into the investigation bar above to start tracing funds.
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+            <button className="btn btn-primary" onClick={() => navigate('/cases')}>📋 View Case Registry</button>
+            <button className="btn btn-outline" onClick={() => navigate('/new-case')}>➕ Create New Case</button>
+          </div>
         </div>
       )}
 
