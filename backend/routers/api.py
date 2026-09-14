@@ -29,14 +29,17 @@ cases_router = APIRouter(prefix="/api/v1/cases", tags=["Cases"])
 
 
 def _protected_case_fields(db: Session, case: Case) -> tuple[str | None, str | None, str | None]:
-    link = db.query(CaseComplaint).filter(CaseComplaint.case_id == case.id, CaseComplaint.role == "primary").first()
-    complaint = db.query(ComplaintRecord).filter(ComplaintRecord.id == link.complaint_id).first() if link else None
-    victim = db.query(Victim).filter(Victim.id == complaint.victim_id).first() if complaint and complaint.victim_id else None
-    return (
-        unprotect(victim.name_ciphertext) if victim else case.victim_name,
-        unprotect(victim.phone_ciphertext) if victim else case.victim_phone,
-        unprotect(complaint.narrative_ciphertext) if complaint else case.complaint_text,
-    )
+    try:
+        link = db.query(CaseComplaint).filter(CaseComplaint.case_id == case.id, CaseComplaint.role == "primary").first()
+        complaint = db.query(ComplaintRecord).filter(ComplaintRecord.id == link.complaint_id).first() if link else None
+        victim = db.query(Victim).filter(Victim.id == complaint.victim_id).first() if complaint and complaint.victim_id else None
+        return (
+            unprotect(victim.name_ciphertext) if victim and victim.name_ciphertext else case.victim_name,
+            unprotect(victim.phone_ciphertext) if victim and victim.phone_ciphertext else case.victim_phone,
+            unprotect(complaint.narrative_ciphertext) if complaint and complaint.narrative_ciphertext else case.complaint_text,
+        )
+    except Exception:
+        return (case.victim_name, case.victim_phone, case.complaint_text)
 
 
 @cases_router.get("")

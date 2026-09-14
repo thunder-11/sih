@@ -26,5 +26,8 @@ def protect(value: str | None) -> str | None:
 def unprotect(value: str | None) -> str | None:
     if value is None:
         return None
-    payload = base64.urlsafe_b64decode(value.encode("ascii"))
-    return AESGCM(_key()).decrypt(payload[:12], payload[12:], b"cfas-phase3").decode("utf-8")
+    try:
+        payload = base64.urlsafe_b64decode(value.encode("ascii"))
+        return AESGCM(_key()).decrypt(payload[:12], payload[12:], b"cfas-phase3").decode("utf-8")
+    except Exception:
+        return value

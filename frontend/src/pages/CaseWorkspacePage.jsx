@@ -363,17 +363,17 @@ export default function CaseWorkspacePage() {
   }, [structuredHops, activeGraph, attributions, activeCase]);
 
   useEffect(() => {
-    if (!targetCaseId) return;
+    if (!targetCaseId || !activeCase) return;
     api.get(`/api/v1/cases/${targetCaseId}/notes`).then(res => setNotes(items(res.data, 'notes'))).catch(() => setNotes([]));
-  }, [targetCaseId]);
+  }, [targetCaseId, activeCase]);
 
   useEffect(() => {
-    if (!targetCaseId) return;
+    if (!targetCaseId || !activeCase) return;
     api.get(`/api/v1/cases/${targetCaseId}/history`).then(res => setHistory(items(res.data, 'history'))).catch(() => setHistory([]));
-  }, [targetCaseId]);
+  }, [targetCaseId, activeCase]);
 
   const loadRiskAndAttributions = useCallback(async (specificCaseId) => {
-    const cid = specificCaseId || targetCaseId;
+    const cid = specificCaseId || (activeCase ? targetCaseId : null);
     if (!cid) return;
     api.get(`/api/v1/cases/${cid}/attributions`).then(res => setAttributions(items(res.data, 'attributions'))).catch(() => setAttributions([]));
     api.get(`/api/v1/cases/${cid}/risk`).then(res => {
@@ -386,13 +386,13 @@ export default function CaseWorkspacePage() {
     }).catch(() => setRisk(null));
     api.get(`/api/v1/cases/${cid}/clusters`).then(res => setClusters(res.data)).catch(() => setClusters(null));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetCaseId]);
-  useEffect(() => { loadRiskAndAttributions(); }, [targetCaseId, loadRiskAndAttributions]);
+  }, [targetCaseId, activeCase]);
+  useEffect(() => { if (activeCase) loadRiskAndAttributions(); }, [activeCase, loadRiskAndAttributions]);
 
   useEffect(() => {
-    if (!targetCaseId) return;
+    if (!targetCaseId || !activeCase) return;
     api.get(`/api/v1/cases/${targetCaseId}/related`).then(res => setRelatedCases(items(res.data, 'related_cases'))).catch(() => setRelatedCases([]));
-  }, [targetCaseId]);
+  }, [targetCaseId, activeCase]);
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !targetCaseId) return;
