@@ -357,7 +357,7 @@ export default function MoneyTrailVisualizer({
             <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
               No Active Money Trail Traced Yet
             </p>
-            <p style={{ color: 'var(--text-secondary)', marginTop: 6, marginBottom: 24, maxWidth: 460, margin: '6px auto 24px' }}>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '6px auto 24px' }}>
               Click "Execute Real-Time Trace" to begin automated forward hop traversal, peeling chain detection, and VASP deposit attribution.
             </p>
             <button className="btn btn-primary btn-lg" onClick={onRunTrace} style={{ padding: '12px 28px', fontSize: '0.95rem' }}>

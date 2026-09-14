@@ -29,15 +29,19 @@ from models import User
 router = APIRouter(prefix="/api/v1", tags=["Attribution and Deterministic Analytics"])
 
 
-def _run(case_id: str, trace_id: str | None, db: Session) -> AnalysisRun:
+def _get_run_or_none(case_id: str, trace_id: str | None, db: Session) -> AnalysisRun | None:
     if trace_id:
         run = db.get(AnalysisRun, trace_id)
         if run is None or run.case_id != case_id or run.run_type != "trace":
             raise ApplicationError(code="TRACE_NOT_FOUND", message="Trace run not found for case", status_code=404)
         return run
-    run = db.execute(select(AnalysisRun).where(
+    return db.execute(select(AnalysisRun).where(
         AnalysisRun.case_id == case_id, AnalysisRun.run_type == "trace"
     ).order_by(AnalysisRun.revision.desc()).limit(1)).scalar_one_or_none()
+
+
+def _run(case_id: str, trace_id: str | None, db: Session) -> AnalysisRun:
+    run = _get_run_or_none(case_id, trace_id, db)
     if run is None:
         raise ApplicationError(code="TRACE_REQUIRED", message="A completed evidence trace is required", status_code=422)
     return run
@@ -69,7 +73,11 @@ def analyze_case(case_id: str, payload: AnalyticsRequest, db: Session = Depends(
 def case_risk(case_id: str, trace_id: str | None = None, db: Session = Depends(get_db),
               user: User = Depends(get_current_user)):
     case = get_accessible_case(db, user, case_id)
-    run = _run(case.id, trace_id, db)
+    run = _get_run_or_none(case.id, trace_id, db)
+    if run is None:
+        return {"case_id": case.id, "trace_id": None, "risk_kind": "deterministic_composite",
+                "assessment_state": "not_assessed", "score": None, "tier": "unknown",
+                "policy_version": POLICY_VERSION, "findings": [], "ml_predictions": []}
     result = db.execute(select(RiskResult).where(
         RiskResult.run_id == run.id, RiskResult.rule_version == POLICY_VERSION
     )).scalar_one_or_none()
@@ -106,14 +114,21 @@ def case_risk(case_id: str, trace_id: str | None = None, db: Session = Depends(g
 def case_attributions(case_id: str, trace_id: str | None = None, db: Session = Depends(get_db),
                       user: User = Depends(get_current_user)):
     case = get_accessible_case(db, user, case_id)
-    return {"case_id": case.id, **attribute_run(_run(case.id, trace_id, db), db)}
+    run = _get_run_or_none(case.id, trace_id, db)
+    if run is None:
+        return {"case_id": case.id, "run_id": None, "attributions": [], "nearest": None,
+                "boundaries": [], "coverage": {"state": "not_started"},
+                "limitations": ["Attribution confidence is a versioned heuristic and is not ML probability."]}
+    return {"case_id": case.id, **attribute_run(run, db)}
 
 
 @router.get("/cases/{case_id}/clusters")
 def case_clusters(case_id: str, trace_id: str | None = None, db: Session = Depends(get_db),
                   user: User = Depends(get_current_user)):
     case = get_accessible_case(db, user, case_id)
-    run = _run(case.id, trace_id, db)
+    run = _get_run_or_none(case.id, trace_id, db)
+    if run is None:
+        return {"case_id": case.id, "trace_id": None, "items": [], "total": 0, "page": 1, "page_size": 0}
     items = cluster_payload(run, db)
     return {"case_id": case.id, "trace_id": run.id, "items": items, "total": len(items), "page": 1, "page_size": len(items)}
 

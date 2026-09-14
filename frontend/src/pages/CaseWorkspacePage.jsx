@@ -331,7 +331,7 @@ export default function CaseWorkspacePage() {
     api.get(`/api/v1/cases/${cid}/attributions`).then(res => setAttributions(items(res.data, 'attributions'))).catch(() => setAttributions([]));
     api.get(`/api/v1/cases/${cid}/risk`).then(res => {
       setRisk(res.data);
-      if (res.data?.assessment_state === 'not_assessed') {
+      if (res.data?.assessment_state === 'not_assessed' && res.data?.trace_id) {
         api.post(`/api/v1/cases/${cid}/analytics`, {})
           .then(() => api.get(`/api/v1/cases/${cid}/risk`).then(r => setRisk(r.data)).catch(() => {}))
           .catch(() => {});
