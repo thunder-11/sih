@@ -27,15 +27,17 @@ export function LoadingOverlay({
   const [isOverlayVisible, setIsOverlayVisible] = useState(active);
 
   const currentValRef = useRef(0);
-  const targetValRef = useRef(progress);
+  const targetValRef = useRef(progress || 0);
   const rafRef = useRef(null);
   const isCompletingRef = useRef(false);
+  const prevActiveRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
-  // Handle active / error state changes & resets
+  // Handle active state transitions
   useEffect(() => {
-    if (active) {
+    if (active && !prevActiveRef.current) {
+      // Starting a new loading investigation
       isCompletingRef.current = false;
       setIsOverlayVisible(true);
       setIsClipping(false);
@@ -43,26 +45,26 @@ export function LoadingOverlay({
       currentValRef.current = 0;
       setDisplayedPercent(0);
       targetValRef.current = Math.max(progress || 0, 15);
-    } else if (isError) {
+    } else if (active && prevActiveRef.current) {
+      // Ongoing loading: update target without resetting current value!
+      targetValRef.current = Math.min(95, Math.max(currentValRef.current, progress || 0));
+    } else if (!active && prevActiveRef.current) {
+      // Completed loading: smoothly interpolate to 100%
+      targetValRef.current = 100;
+    }
+    prevActiveRef.current = active;
+  }, [active, progress]);
+
+  // Handle error dismissal
+  useEffect(() => {
+    if (isError) {
       isCompletingRef.current = false;
       setIsOverlayVisible(false);
       setIsClipping(false);
       setShowContent(true);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    } else if (isOverlayVisible && !isCompletingRef.current) {
-      // Transition from active -> inactive: drive target to 100%
-      targetValRef.current = 100;
     }
-  }, [active, isError, isOverlayVisible, progress]);
-
-  // Update target progress when progress prop changes
-  useEffect(() => {
-    if (active) {
-      targetValRef.current = Math.min(95, Math.max(15, progress || 0));
-    } else if (isOverlayVisible) {
-      targetValRef.current = 100;
-    }
-  }, [progress, active, isOverlayVisible]);
+  }, [isError]);
 
   // Smooth RAF progress interpolation & guaranteed completion dismiss
   useEffect(() => {
