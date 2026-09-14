@@ -35,16 +35,23 @@ function transformToForensicGraph(graphData, nodeStyle = 'circular', entityFilte
     hopGroups[hop].push(n);
   });
 
-  const HORIZONTAL_SPACING = nodeStyle === 'circular' ? 260 : 310;
-  const VERTICAL_SPACING = nodeStyle === 'circular' ? 160 : 120;
-  const CENTER_Y = nodeStyle === 'circular' ? 280 : 220;
+  const HORIZONTAL_SPACING = nodeStyle === 'circular' ? 140 : 190;
+  const VERTICAL_SPACING = nodeStyle === 'circular' ? 58 : 68;
+  const CENTER_Y = 220;
+  const MAX_PER_COL = 4;
 
   const fNodes = nodes.map(n => {
     const hop = n.hop ?? 0;
     const group = hopGroups[hop] || [n];
     const idx = group.findIndex(g => g.id === n.id);
     const count = group.length;
-    const yOff = (idx - (count - 1) / 2) * VERTICAL_SPACING;
+
+    const colIdx = Math.floor(idx / MAX_PER_COL);
+    const rowIdx = idx % MAX_PER_COL;
+    const rowsInThisCol = Math.min(MAX_PER_COL, count - colIdx * MAX_PER_COL);
+
+    const subX = colIdx * (nodeStyle === 'circular' ? 70 : 160);
+    const subY = (rowIdx - (rowsInThisCol - 1) / 2) * VERTICAL_SPACING + (colIdx % 2 === 1 ? 12 : 0);
 
     const isVasp = n.node_type?.includes('VASP') || n.node_type?.includes('EXCHANGE');
     const isMixer = n.node_type === 'MIXER' || n.node_type?.includes('HIGH_RISK');
@@ -73,8 +80,8 @@ function transformToForensicGraph(graphData, nodeStyle = 'circular', entityFilte
     }
 
     return {
-      id: n.id, x: hop * HORIZONTAL_SPACING + 120, y: CENTER_Y + yOff,
-      radius: isOrigin ? 30 : isVasp ? 32 : 26, w: isVasp ? 190 : 175, h: isVasp ? 76 : 68,
+      id: n.id, x: hop * HORIZONTAL_SPACING + 100 + subX, y: CENTER_Y + subY,
+      radius: isOrigin ? 26 : isVasp ? 28 : 22, w: 164, h: 56,
       label, sub, type, amount: computedAmount, unit: nodeUnit, color,
       riskScore: n.risk_score ?? 0, vasp_name: n.vasp_name ?? null, node_type: n.node_type,
       chain: n.chain ?? 'TRON', activationProgress: 0,

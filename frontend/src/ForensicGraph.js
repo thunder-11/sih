@@ -158,28 +158,32 @@ export class ForensicGraph {
     }
 
     /**
-     * Professional Blockchain Forensic Hierarchical Force-Directed Layout Engine
-     * Generates a DAG flow: Inbound Funders (Left) -> Investigated Target (Center) -> Mule Forward Hops -> VASP Exits (Right)
-     * Features collision avoidance, generous spacing, edge-crossing minimization, and force relaxation.
+     * Professional Blockchain Forensic Hierarchical Layout Engine
+     * Generates a sleek, compact DAG flow with multi-column staggering for dense mule layers.
+     * Prevents giant vertical towers, eliminates excessive empty horizontal gaps, and perfectly frames the flow.
      */
     computeForensicLayout(nodes, edges, nodeStyle = 'cards') {
         if (!nodes || nodes.length === 0) return { nodes: [], edges: edges || [] };
 
         const isCards = nodeStyle === 'cards';
-        const cardW = isCards ? 200 : 80;
-        const cardH = isCards ? 85 : 80;
-        // Compact but readable spacing — enough clearance without spreading nodes off-screen
-        const HORIZONTAL_LAYER_GAP = isCards ? 260 : 210;
-        const VERTICAL_MIN_GAP = isCards ? 100 : 85;
-        const BASE_Y = 280;
+        const cardW = isCards ? 164 : 64;
+        const cardH = isCards ? 56 : 64;
+        const HORIZONTAL_LAYER_GAP = isCards ? 190 : 130;
+        const VERTICAL_NODE_GAP = isCards ? 68 : 58;
+        const BASE_Y = 220;
+        const MAX_PER_COL = 4; // Maximum nodes in a single vertical stack
 
         const nodeMap = new Map();
-        nodes.forEach(n => nodeMap.set(n.id, n));
+        nodes.forEach(n => {
+            n.w = cardW;
+            n.h = cardH;
+            nodeMap.set(n.id, n);
+        });
 
-        // 1. Identify Investigated Origin Target
+        // 1. Identify Origin / Victim Node
         let rootNode = nodes.find(n => n.type === 'VICTIM' || n.node_type === 'ORIGIN_VICTIM' || n.hop === 0) || nodes[0];
 
-        // 2. Build Adjacency Graphs
+        // 2. Build Adjacency
         const forwardAdj = new Map();
         const backwardAdj = new Map();
         nodes.forEach(n => {
@@ -192,11 +196,10 @@ export class ForensicGraph {
             if (backwardAdj.has(e.to)) backwardAdj.get(e.to).push(e.from);
         });
 
-        // 3. Assign Topological Flow Layers (-k for inbound funders, 0 for root, +k for forward hops)
+        // 3. Assign Topological Flow Layers based primarily on hop, falling back to BFS
         const layers = new Map();
         layers.set(rootNode.id, 0);
 
-        // BFS Outward (Downstream hops: Layer +1, +2, +3...)
         const forwardQueue = [rootNode.id];
         const forwardVisited = new Set([rootNode.id]);
         while (forwardQueue.length > 0) {
@@ -208,36 +211,18 @@ export class ForensicGraph {
                     forwardVisited.add(nxtId);
                     layers.set(nxtId, currLayer + 1);
                     forwardQueue.push(nxtId);
-                } else {
-                    const existingL = layers.get(nxtId) || 0;
-                    if (currLayer + 1 > existingL) {
-                        layers.set(nxtId, currLayer + 1);
-                    }
                 }
             });
         }
 
-        // BFS Inward (Upstream funding sources: Layer -1, -2...)
-        const backwardQueue = [rootNode.id];
-        const backwardVisited = new Set([rootNode.id]);
-        while (backwardQueue.length > 0) {
-            const currId = backwardQueue.shift();
-            const currLayer = layers.get(currId) || 0;
-            const sources = backwardAdj.get(currId) || [];
-            sources.forEach(srcId => {
-                if (!layers.has(srcId)) {
-                    layers.set(srcId, currLayer - 1);
-                    backwardVisited.add(srcId);
-                    backwardQueue.push(srcId);
-                }
-            });
-        }
-
-        // Fallback for any unvisited nodes
+        // Apply explicit hop from backend if present, clamped to avoid runaway layers
         nodes.forEach(n => {
-            if (!layers.has(n.id)) {
-                const hopVal = typeof n.hop === 'number' ? n.hop : 1;
-                layers.set(n.id, hopVal);
+            if (n.id === rootNode.id) {
+                layers.set(n.id, 0);
+            } else if (typeof n.hop === 'number' && n.hop >= 0) {
+                layers.set(n.id, Math.min(8, n.hop));
+            } else if (!layers.has(n.id)) {
+                layers.set(n.id, 1);
             }
         });
 
@@ -252,12 +237,13 @@ export class ForensicGraph {
         const sortedLayerKeys = Array.from(layerGroups.keys()).sort((a, b) => a - b);
         const minLayer = sortedLayerKeys[0] ?? 0;
 
-        // 5. Initial Symmetrical Layer Placement with Median Sorting
+        // 5. Place nodes within each layer using sub-grid staggering (max 4 per vertical column)
+        let runningXOffset = 0;
         sortedLayerKeys.forEach(l => {
             const group = layerGroups.get(l);
             const count = group.length;
 
-            // Sort nodes within each layer by connected neighbor mean Y to untangle edge crossings
+            // Sort nodes within each layer by connected neighbor mean Y to minimize crossing
             group.sort((a, b) => {
                 const aConns = (backwardAdj.get(a.id) || []).concat(forwardAdj.get(a.id) || []);
                 const bConns = (backwardAdj.get(b.id) || []).concat(forwardAdj.get(b.id) || []);
@@ -266,21 +252,31 @@ export class ForensicGraph {
                 return aMean - bMean;
             });
 
+            const numCols = Math.ceil(count / MAX_PER_COL);
+
             group.forEach((node, idx) => {
-                // Alternating curved vertical fanning
-                const yOffset = (idx - (count - 1) / 2) * VERTICAL_MIN_GAP;
-                node.x = (l - minLayer) * HORIZONTAL_LAYER_GAP + 180;
-                node.y = BASE_Y + yOffset;
+                const colIdx = Math.floor(idx / MAX_PER_COL);
+                const rowIdx = idx % MAX_PER_COL;
+                const rowsInThisCol = Math.min(MAX_PER_COL, count - colIdx * MAX_PER_COL);
+
+                const subX = colIdx * (isCards ? 168 : 80);
+                const subY = (rowIdx - (rowsInThisCol - 1) / 2) * VERTICAL_NODE_GAP + (colIdx % 2 === 1 ? 12 : 0);
+
+                node.x = 100 + (l - minLayer) * HORIZONTAL_LAYER_GAP + runningXOffset + subX;
+                node.y = BASE_Y + subY;
                 node.layer = l;
             });
+
+            if (numCols > 1) {
+                runningXOffset += (numCols - 1) * (isCards ? 120 : 60);
+            }
         });
 
-        // 6. Force-Directed Physics Relaxation & Card Collision Avoidance (80 iterations)
-        const iterations = 80;
+        // 6. Gentle Relaxation: Only push nodes that strictly overlap vertically
+        const iterations = 30;
         for (let iter = 0; iter < iterations; iter++) {
-            const damping = Math.max(0.12, 1.0 - iter / iterations);
+            const damping = Math.max(0.1, 1.0 - iter / iterations);
 
-            // A. Node-to-Node Repulsion with Bounding Box Clearance
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
                     const n1 = nodes[i];
@@ -288,61 +284,23 @@ export class ForensicGraph {
 
                     const dx = n2.x - n1.x;
                     const dy = n2.y - n1.y;
-                    const distSq = dx * dx + dy * dy || 1;
-                    const dist = Math.sqrt(distSq);
 
-                    // Clearance = half-width each + padding (smaller padding = tighter layout)
-                    const minAllowedX = (n1.w || cardW) / 2 + (n2.w || cardW) / 2 + 30;
-                    const minAllowedY = (n1.h || cardH) / 2 + (n2.h || cardH) / 2 + 28;
+                    const minAllowedX = cardW + 16;
+                    const minAllowedY = cardH + 12;
 
-                    // Hard collision avoidance: only push nodes that actually overlap
                     if (Math.abs(dx) < minAllowedX && Math.abs(dy) < minAllowedY) {
                         const overlapY = minAllowedY - Math.abs(dy);
-                        const pushY = (dy >= 0 ? 1 : -1) * Math.max(overlapY, 12) * 0.4 * damping;
+                        const pushY = (dy >= 0 ? 1 : -1) * Math.min(overlapY, 14) * 0.35 * damping;
 
                         if (n1.id !== rootNode.id) n1.y -= pushY;
                         if (n2.id !== rootNode.id) n2.y += pushY;
-                    } else if (dist < 180) {
-                        // Soft repulsion only within 180px — prevents excessive spreading
-                        const force = ((180 - dist) / 180) * 8 * damping;
-                        const fx = (dx / dist) * force * 0.15;
-                        const fy = (dy / dist) * force * 0.7;
-
-                        if (n1.id !== rootNode.id) { n1.x -= fx; n1.y -= fy; }
-                        if (n2.id !== rootNode.id) { n2.x += fx; n2.y += fy; }
                     }
                 }
             }
 
-            // B. Connected Edge Spring Forces & Straight Forward Flow Direction
-            edges.forEach(e => {
-                const fromNode = nodeMap.get(e.from);
-                const toNode = nodeMap.get(e.to);
-                if (!fromNode || !toNode) return;
-
-                const dy = toNode.y - fromNode.y;
-                const springY = dy * 0.08 * damping;
-
-                if (toNode.id !== rootNode.id) toNode.y -= springY * 0.5;
-                if (fromNode.id !== rootNode.id) fromNode.y += springY * 0.5;
-
-                // Enforce directional left-to-right flow spacing (reduced to prevent over-spreading)
-                const minEdgeDx = isCards ? 200 : 160;
-                if (toNode.x < fromNode.x + minEdgeDx) {
-                    if (toNode.id !== rootNode.id) toNode.x += (fromNode.x + minEdgeDx - toNode.x) * 0.25 * damping;
-                }
-            });
-
-            // C. Layer Vertical Centering Anchor
-            sortedLayerKeys.forEach(l => {
-                const group = layerGroups.get(l);
-                if (!group || group.length === 0) return;
-                const groupCenterY = group.reduce((sum, n) => sum + n.y, 0) / group.length;
-                // Stronger center-pull keeps all layers vertically centered → compact layout
-                const centerPull = (BASE_Y - groupCenterY) * 0.10 * damping;
-                group.forEach(n => {
-                    if (n.id !== rootNode.id) n.y += centerPull;
-                });
+            // Keep all nodes firmly within comfortable vertical bounds
+            nodes.forEach(n => {
+                n.y = Math.max(BASE_Y - 220, Math.min(BASE_Y + 220, n.y));
             });
         }
 
@@ -547,26 +505,27 @@ export class ForensicGraph {
         const rect = this.container.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return;
 
+        const isCards = this.nodeStyle === 'cards';
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         this.data.nodes.forEach(n => {
-            const padX = this.nodeStyle === 'cards' ? (n.w || 180) / 2 + 24 : (n.radius || 30) + 28;
-            const padY = this.nodeStyle === 'cards' ? (n.h || 70) / 2 + 24 : (n.radius || 30) + 32;
+            const padX = isCards ? (n.w || 164) / 2 + 16 : (n.radius || 24) + 16;
+            const padY = isCards ? (n.h || 56) / 2 + 16 : (n.radius || 24) + 16;
             minX = Math.min(minX, n.x - padX);
             maxX = Math.max(maxX, n.x + padX);
             minY = Math.min(minY, n.y - padY);
             maxY = Math.max(maxY, n.y + padY);
         });
 
-        const graphW = Math.max(maxX - minX, 300);
-        const graphH = Math.max(maxY - minY, 200);
+        const graphW = Math.max(maxX - minX, 320);
+        const graphH = Math.max(maxY - minY, 180);
         const graphCenterX = (minX + maxX) / 2;
         const graphCenterY = (minY + maxY) / 2;
 
-        // Leave a 60px margin on each side so nodes never kiss the edge
-        const scaleX = (rect.width - 120) / graphW;
-        const scaleY = (rect.height - 120) / graphH;
-        // Cap at 0.85 — never zoom in beyond natural size; always fit full graph
-        const fitScale = Math.min(0.85, Math.max(0.25, Math.min(scaleX, scaleY)));
+        // Comfortable padding margins
+        const scaleX = (rect.width - 80) / graphW;
+        const scaleY = (rect.height - 80) / graphH;
+        // Optimal fit scale: 0.65 to 1.0 (readable text & cards)
+        const fitScale = Math.min(1.0, Math.max(0.55, Math.min(scaleX, scaleY)));
 
         this.camera.targetScale = fitScale;
 

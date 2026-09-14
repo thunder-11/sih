@@ -18,9 +18,10 @@ function transformToForensicGraph(graphData, nodeStyle = 'cards') {
     hopGroups[hop].push(n);
   });
 
-  const HORIZONTAL_SPACING = nodeStyle === 'circular' ? 260 : 310;
-  const VERTICAL_SPACING   = nodeStyle === 'circular' ? 160 : 120;
-  const CENTER_Y            = nodeStyle === 'circular' ? 260 : 200;
+  const HORIZONTAL_SPACING = nodeStyle === 'circular' ? 140 : 190;
+  const VERTICAL_SPACING   = nodeStyle === 'circular' ? 58 : 68;
+  const CENTER_Y            = 220;
+  const MAX_PER_COL         = 4;
 
   // Compute node amount aggregation from transaction flows
   const fNodes = nodes.map(n => {
@@ -28,7 +29,13 @@ function transformToForensicGraph(graphData, nodeStyle = 'cards') {
     const group  = hopGroups[hop] || [n];
     const idx    = group.findIndex(g => g.id === n.id);
     const count  = group.length;
-    const yOff   = (idx - (count - 1) / 2) * VERTICAL_SPACING;
+
+    const colIdx = Math.floor(idx / MAX_PER_COL);
+    const rowIdx = idx % MAX_PER_COL;
+    const rowsInThisCol = Math.min(MAX_PER_COL, count - colIdx * MAX_PER_COL);
+
+    const subX = colIdx * (nodeStyle === 'circular' ? 70 : 160);
+    const subY = (rowIdx - (rowsInThisCol - 1) / 2) * VERTICAL_SPACING + (colIdx % 2 === 1 ? 12 : 0);
 
     const isVasp   = n.node_type?.includes('VASP') || n.node_type?.includes('EXCHANGE');
     const isMixer  = n.node_type === 'MIXER' || n.node_type?.includes('HIGH_RISK');
@@ -73,11 +80,11 @@ function transformToForensicGraph(graphData, nodeStyle = 'cards') {
 
     return {
       id:                 n.id,
-      x:                  hop * HORIZONTAL_SPACING + 120,
-      y:                  CENTER_Y + yOff,
-      radius:             isOrigin ? 30 : isVasp ? 32 : 26,
-      w:                  isVasp ? 190 : 175,
-      h:                  isVasp ? 76  : 68,
+      x:                  hop * HORIZONTAL_SPACING + 100 + subX,
+      y:                  CENTER_Y + subY,
+      radius:             isOrigin ? 26 : isVasp ? 28 : 22,
+      w:                  164,
+      h:                  56,
       label,
       sub,
       type,
