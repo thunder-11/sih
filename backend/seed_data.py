@@ -311,13 +311,6 @@ def _seed_mixer_bridge(db: Session):
 # 5. DEMO CASES (pre-wired for live demo)
 # ─────────────────────────────────────────────────────
 def _seed_demo_cases(db: Session, vasp_map: dict):
-    now = datetime.now(timezone.utc)
-
-    # ── Case 1: Main Demo — Task Scam via TRON USDT ──
-    case1 = Case(
-        id="case-demo-001",
-        complaint_source="ncrp", external_complaint_id="NCRP-2026-88421",
-def _seed_demo_cases(db: Session, vasp_map: dict):
     from seed_predefined_cases import seed_database
     seed_database()
 
