@@ -189,9 +189,10 @@ export default function TransactionGraphPage() {
       fg.resize();
       if (forensicData.nodes.length > 0) {
         fg.loadData(forensicData);
-        // Automatically start the dynamic stream visualization
-        const playing = fg.togglePlay();
-        setIsPlaying(playing);
+        fg.setProgress(0);
+        fg.pause();
+        setIsPlaying(false);
+        setProgress(0);
       }
     });
     return () => {
@@ -476,6 +477,11 @@ export default function TransactionGraphPage() {
             onComplete={() => {
               if (graphRef.current) {
                 graphRef.current.resize();
+                if (forensicData.nodes.length > 0) {
+                  graphRef.current.setProgress(0);
+                  graphRef.current.play();
+                  setIsPlaying(true);
+                }
               }
             }}
           />

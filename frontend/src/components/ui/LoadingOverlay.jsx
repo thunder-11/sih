@@ -29,32 +29,42 @@ export function LoadingOverlay({
   const currentValRef = useRef(0);
   const targetValRef = useRef(progress);
   const rafRef = useRef(null);
-  const completeTimerRef = useRef(null);
+  const isCompletingRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
-  // Update target progress
-  useEffect(() => {
-    targetValRef.current = Math.min(100, Math.max(0, progress));
-  }, [progress]);
-
-  // Handle active state changes & reset on new investigation
+  // Handle active / error state changes & resets
   useEffect(() => {
     if (active) {
+      isCompletingRef.current = false;
       setIsOverlayVisible(true);
       setIsClipping(false);
       setShowContent(false);
       currentValRef.current = 0;
       setDisplayedPercent(0);
-      targetValRef.current = Math.max(progress, 5); // Start at minimum 5% when active
+      targetValRef.current = Math.max(progress || 0, 15);
     } else if (isError) {
-      // Immediate exit on error
+      isCompletingRef.current = false;
       setIsOverlayVisible(false);
       setIsClipping(false);
       setShowContent(true);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    } else if (isOverlayVisible && !isCompletingRef.current) {
+      // Transition from active -> inactive: drive target to 100%
+      targetValRef.current = 100;
     }
-  }, [active, isError]);
+  }, [active, isError, isOverlayVisible, progress]);
 
-  // Smooth RAF interpolation from current to target
+  // Update target progress when progress prop changes
+  useEffect(() => {
+    if (active) {
+      targetValRef.current = Math.min(95, Math.max(15, progress || 0));
+    } else if (isOverlayVisible) {
+      targetValRef.current = 100;
+    }
+  }, [progress, active, isOverlayVisible]);
+
+  // Smooth RAF progress interpolation & guaranteed completion dismiss
   useEffect(() => {
     if (!isOverlayVisible) return;
 
@@ -64,8 +74,8 @@ export function LoadingOverlay({
       const diff = target - current;
 
       if (Math.abs(diff) > 0.4) {
-        // Dynamic easing: faster for large gaps, smooth near target
-        const step = diff > 0 ? Math.max(0.6, diff * 0.12) : diff * 0.2;
+        // Fast dynamic step when jumping to 100%, smooth near target
+        const step = diff > 0 ? Math.max(1.2, diff * 0.18) : diff * 0.2;
         const next = Math.min(100, current + step);
         currentValRef.current = next;
         setDisplayedPercent(Math.round(next));
@@ -74,18 +84,19 @@ export function LoadingOverlay({
         currentValRef.current = target;
         setDisplayedPercent(Math.round(target));
 
-        // When reached 100% and trace is complete
-        if (target >= 100 && !isClipping) {
-          if (completeTimerRef.current) clearTimeout(completeTimerRef.current);
-          completeTimerRef.current = setTimeout(() => {
+        if (target >= 100 && !isCompletingRef.current) {
+          isCompletingRef.current = true;
+          // Trigger clipping reveal
+          setTimeout(() => {
             setIsClipping(true);
             setTimeout(() => {
               setShowContent(true);
               setIsOverlayVisible(false);
-              onComplete?.();
-            }, 450);
-          }, 180);
-        } else {
+              isCompletingRef.current = false;
+              onCompleteRef.current?.();
+            }, 420);
+          }, 120);
+        } else if (!isCompletingRef.current) {
           rafRef.current = requestAnimationFrame(animate);
         }
       }
@@ -95,9 +106,8 @@ export function LoadingOverlay({
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (completeTimerRef.current) clearTimeout(completeTimerRef.current);
     };
-  }, [isOverlayVisible, isClipping, onComplete]);
+  }, [isOverlayVisible]);
 
   const overlayElement = isOverlayVisible ? (
     <div

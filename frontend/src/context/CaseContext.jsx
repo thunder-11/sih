@@ -39,7 +39,7 @@ export function CaseProvider({ children }) {
       try {
         const effective = cRes.data.primary_report_event_id
           ? { ...graphFilters, report_event_id: cRes.data.primary_report_event_id }
-          : { temporal_view: 'all' };
+          : { ...graphFilters };
         const gRes = await api.get(`/api/v1/cases/${cId}/graph`, { params: effective });
         if (sequence !== requestSequence.current) return;
         const graph = normalizeGraph(gRes.data);
