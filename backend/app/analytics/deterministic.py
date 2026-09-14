@@ -11,7 +11,7 @@ from datetime import timedelta
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
 from sqlalchemy.orm import Session
 
 from app.persistence.models import (
@@ -187,6 +187,7 @@ def persist_evaluation(run: AnalysisRun, db: Session) -> RiskResult:
     if existing:
         return existing
     findings, result = evaluate(run, db)
+    db.execute(delete(RuleFinding).where(RuleFinding.run_id == run.id, RuleFinding.policy_version == POLICY_VERSION))
     for finding in findings:
         db.add(RuleFinding(run_id=run.id, rule_id=finding["rule_id"], policy_version=POLICY_VERSION,
                            temporal_partition="run_snapshot", measured_values=finding["measured_values"],

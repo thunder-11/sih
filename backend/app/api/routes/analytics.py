@@ -92,6 +92,7 @@ def case_risk(case_id: str, trace_id: str | None = None, db: Session = Depends(g
                 db.add(case_obj)
             db.commit()
         except Exception:
+            db.rollback()
             result = None
     if result is None:
         return {"case_id": case.id, "trace_id": run.id, "risk_kind": "deterministic_composite",
