@@ -34,8 +34,10 @@ export function LoadingOverlay({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
-  // Handle active state transitions
+  // Handle active state transitions & progress updates
   useEffect(() => {
+    const isFinished = !active || (typeof progress === 'number' && progress >= 100);
+
     if (active && !prevActiveRef.current) {
       // Starting a new loading investigation
       isCompletingRef.current = false;
@@ -44,12 +46,16 @@ export function LoadingOverlay({
       setShowContent(false);
       currentValRef.current = 0;
       setDisplayedPercent(0);
-      targetValRef.current = Math.max(progress || 0, 15);
+      targetValRef.current = isFinished ? 100 : Math.max(progress || 0, 15);
     } else if (active && prevActiveRef.current) {
-      // Ongoing loading: update target without resetting current value!
-      targetValRef.current = Math.min(95, Math.max(currentValRef.current, progress || 0));
-    } else if (!active && prevActiveRef.current) {
-      // Completed loading: smoothly interpolate to 100%
+      // Ongoing loading: update target without resetting current value
+      if (isFinished) {
+        targetValRef.current = 100;
+      } else {
+        targetValRef.current = Math.min(95, Math.max(currentValRef.current, progress || 0));
+      }
+    } else if (!active) {
+      // Not active: drive target to 100%
       targetValRef.current = 100;
     }
     prevActiveRef.current = active;
