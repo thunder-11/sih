@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCase } from '../context/CaseContext';
 import { ForensicGraph } from '../ForensicGraph';
 import AnimatedNumber from '../components/AnimatedNumber';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import api from '../lib/api';
 
@@ -214,6 +215,66 @@ export default function TransactionGraphPage() {
     graphRef.current?.setProgress(p);
   }, []);
 
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const stageWrapperRef = useRef(null);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!stageWrapperRef.current) return;
+    const elem = stageWrapperRef.current;
+
+    if (!document.fullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {
+          setIsFullscreen(prev => !prev);
+        });
+      } else {
+        setIsFullscreen(prev => !prev);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!document.fullscreenElement && document.fullscreenElement === stageWrapperRef.current;
+      setIsFullscreen(isNowFullscreen);
+      requestAnimationFrame(() => {
+        if (graphRef.current) {
+          graphRef.current.resize();
+        }
+      });
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (graphRef.current) {
+        graphRef.current.resize();
+      }
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [isFullscreen]);
+
   const progressPct = Math.round(progress * 100);
   const displayRiskScore = caseRiskData?.score ?? activeCase?.risk_score ?? 0;
   const displayRiskTier = (caseRiskData?.tier || activeCase?.risk_tier || 'ASSESSED').toUpperCase();
@@ -228,7 +289,9 @@ export default function TransactionGraphPage() {
       isError={!!caseError}
     >
       <motion.div
-        style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+        ref={stageWrapperRef}
+        className={isFullscreen ? 'graph-fullscreen-active' : ''}
+        style={{ display: 'flex', flexDirection: 'column', gap: isFullscreen ? 10 : 14 }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -339,8 +402,8 @@ export default function TransactionGraphPage() {
         </label>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selectedNode ? '1fr 320px' : '1fr', gap: 14 }}>
-        <div className="panel" style={{ margin: 0, padding: 0, position: 'relative', height: 580, overflow: 'hidden' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selectedNode ? '1fr 340px' : '1fr', gap: 14, flex: isFullscreen ? '1 1 0' : 'none', minHeight: 0 }}>
+        <div className="panel" style={{ margin: 0, padding: 0, position: 'relative', height: isFullscreen ? '100%' : 580, overflow: 'hidden' }}>
           <div style={{
             position: 'absolute', top: 14, left: 14, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6,
             background: 'rgba(8,12,20,0.82)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)',
@@ -365,6 +428,16 @@ export default function TransactionGraphPage() {
               {progressPct === 100 ? 'TRACE COMPLETE' : isPlaying ? 'TRACING...' : `${progressPct}% TRACED`}
             </span>
           </div>
+
+          {/* Fullscreen Toggle Button in Bottom Corner */}
+          <button
+            className="graph-fullscreen-btn"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Expand Graph Fullscreen'}
+            aria-label={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Mode'}
+          >
+            {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          </button>
 
           {forensicData.nodes.length === 0 && (
             <div className="loading-overlay" style={{ height: '100%', position: 'absolute', inset: 0 }}>

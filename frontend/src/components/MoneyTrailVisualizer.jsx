@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { ForensicGraph } from '../ForensicGraph';
 
 // ── Data Transform: backend graph → ForensicGraph format ───────
@@ -168,6 +169,8 @@ export default function MoneyTrailVisualizer({
   const [isViewLocked, setIsViewLocked] = useState(false);
   const [speed, setSpeed]               = useState(1.0);
   const [progress, setProgress]         = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const stageWrapperRef                 = useRef(null);
 
   const totalHops = useMemo(() => {
     if (!graphData?.edges?.length) return 0;
@@ -337,6 +340,64 @@ export default function MoneyTrailVisualizer({
     graphRef.current.rearrange();
   };
 
+  const toggleFullscreen = useCallback(() => {
+    if (!stageWrapperRef.current) return;
+    const elem = stageWrapperRef.current;
+
+    if (!document.fullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {
+          setIsFullscreen(prev => !prev);
+        });
+      } else {
+        setIsFullscreen(prev => !prev);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {
+          setIsFullscreen(false);
+        });
+      } else {
+        setIsFullscreen(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isNowFullscreen = !!document.fullscreenElement && document.fullscreenElement === stageWrapperRef.current;
+      setIsFullscreen(isNowFullscreen);
+      requestAnimationFrame(() => {
+        if (graphRef.current) {
+          graphRef.current.resize();
+        }
+      });
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFullscreen]);
+
+  // When isFullscreen state changes (or fallback), trigger resize
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (graphRef.current) {
+        graphRef.current.resize();
+      }
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [isFullscreen]);
+
   // Empty state if no trace data yet
   if (!graphData?.edges?.length) {
     return (
@@ -372,7 +433,10 @@ export default function MoneyTrailVisualizer({
   const isAtNode0 = currentHop === 0 && progress === 0;
 
   return (
-    <div className="canvas-stage-wrapper">
+    <div
+      ref={stageWrapperRef}
+      className={`canvas-stage-wrapper ${isFullscreen ? 'graph-fullscreen-active' : ''}`}
+    >
       {/* Canvas Header Bar */}
       <div className="canvas-stage-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -462,11 +526,22 @@ export default function MoneyTrailVisualizer({
         style={{
           position: 'relative',
           width: '100%',
-          height: 480,
+          height: isFullscreen ? '100%' : 480,
           background: '#080c14',
           overflow: 'hidden',
+          flex: isFullscreen ? '1 1 0' : 'none',
         }}
-      />
+      >
+        {/* Fullscreen Toggle Button in Bottom Corner */}
+        <button
+          className="graph-fullscreen-btn"
+          onClick={toggleFullscreen}
+          title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Expand to Fullscreen'}
+          aria-label={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Mode'}
+        >
+          {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
+      </div>
 
       {/* Scrubber & Controls Deck */}
       <div style={{
