@@ -57,9 +57,9 @@ function transformToForensicGraph(graphData, nodeStyle = 'circular', entityFilte
     const sub = n.id.substring(0, 18) + '...';
 
     let computedAmount = n.total_received || 0;
+    const inTxs = edges.filter(e => e.target === n.id);
+    const outTxs = edges.filter(e => e.source === n.id);
     if (!computedAmount) {
-      const inTxs = edges.filter(e => e.target === n.id);
-      const outTxs = edges.filter(e => e.source === n.id);
       if (isOrigin && outTxs.length > 0) computedAmount = outTxs.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
       else if (inTxs.length > 0) computedAmount = inTxs.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
       else if (outTxs.length > 0) computedAmount = outTxs.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -280,22 +280,14 @@ export default function TransactionGraphPage() {
   const displayRiskTier = (caseRiskData?.tier || activeCase?.risk_tier || 'ASSESSED').toUpperCase();
 
   return (
-    <LoadingOverlay
-      active={loadingCase}
-      progress={loadingCase ? 75 : 100}
-      stageMessage="Rendering canvas forensic transaction graph & risk vectors…"
-      walletAddress={activeCase?.wallets?.[0]?.wallet_address || activeCase?.external_complaint_id || ''}
-      chain={activeCase?.wallets?.[0]?.chain || 'TRON'}
-      isError={!!caseError}
+    <motion.div
+      ref={stageWrapperRef}
+      className={isFullscreen ? 'graph-fullscreen-active' : ''}
+      style={{ display: 'flex', flexDirection: 'column', gap: isFullscreen ? 10 : 14 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
     >
-      <motion.div
-        ref={stageWrapperRef}
-        className={isFullscreen ? 'graph-fullscreen-active' : ''}
-        style={{ display: 'flex', flexDirection: 'column', gap: isFullscreen ? 10 : 14 }}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
       <div className="page-header" style={{ margin: 0 }}>
         <div>
           <h1>🕸️ Forensic Transaction Graph</h1>
@@ -465,6 +457,21 @@ export default function TransactionGraphPage() {
           )}
 
           <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />
+
+          {/* Graph-Scoped Loading Overlay */}
+          <LoadingOverlay
+            active={loadingCase}
+            progress={loadingCase ? 80 : 100}
+            stageMessage="Rendering canvas forensic transaction graph & risk vectors…"
+            walletAddress={activeCase?.wallets?.[0]?.wallet_address || activeCase?.external_complaint_id || ''}
+            chain={activeCase?.wallets?.[0]?.chain || 'TRON'}
+            isError={!!caseError}
+            onComplete={() => {
+              if (graphRef.current) {
+                graphRef.current.resize();
+              }
+            }}
+          />
         </div>
 
         <AnimatePresence>
@@ -538,6 +545,5 @@ export default function TransactionGraphPage() {
         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>Drag to pan · Scroll to zoom · Click node to inspect</span>
       </div>
     </motion.div>
-    </LoadingOverlay>
   );
 }

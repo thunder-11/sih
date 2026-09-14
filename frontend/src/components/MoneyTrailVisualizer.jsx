@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { ForensicGraph } from '../ForensicGraph';
+import { LoadingOverlay } from './ui/LoadingOverlay';
 
 // ── Data Transform: backend graph → ForensicGraph format ───────
 function transformToForensicGraph(graphData, nodeStyle = 'cards') {
@@ -158,6 +159,13 @@ export default function MoneyTrailVisualizer({
   setIsPlaying,
   onSelectNode,
   selectedNodeId,
+  loadingActive = false,
+  loadingProgress = 0,
+  loadingMessage = '',
+  targetWallet = '',
+  targetChain = '',
+  isError = false,
+  onLoadingComplete,
 }) {
   const containerRef = useRef(null);
   const graphRef     = useRef(null);
@@ -398,34 +406,22 @@ export default function MoneyTrailVisualizer({
     return () => clearTimeout(timer);
   }, [isFullscreen]);
 
-  // Empty state if no trace data yet
-  if (!graphData?.edges?.length) {
+  // Empty state only when not tracing/loading and no graph edges
+  if (!graphData?.edges?.length && !loadingActive && !tracing) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '56px 24px', background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
-        {tracing ? (
-          <div>
-            <div className="spinner" style={{ width: 44, height: 44, margin: '0 auto 16px', borderColor: 'rgba(200, 109, 59, 0.2)', borderTopColor: 'var(--accent-copper)' }}></div>
-            <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-               Value-Weighted BFS Forward Tracing Active
-            </p>
-            <p style={{ color: 'var(--accent-copper-light)', fontSize: '0.85rem', marginTop: 6, fontFamily: 'var(--font-mono)' }}>
-              Traversing on-chain transactions across TRON, ETH & BSC nodes...
-            </p>
-          </div>
-        ) : (
-          <div>
-            <div style={{ fontSize: '2.5rem', marginBottom: 12 }}></div>
-            <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
-              No Active Money Trail Traced Yet
-            </p>
-            <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '6px auto 24px' }}>
-              Click "Execute Real-Time Trace" to begin automated forward hop traversal, peeling chain detection, and VASP deposit attribution.
-            </p>
-            <button className="btn btn-primary btn-lg" onClick={onRunTrace} style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
-               Execute Real-Time Trace
-            </button>
-          </div>
-        )}
+        <div>
+          <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🕸️</div>
+          <p style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+            No Active Money Trail Traced Yet
+          </p>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: 460, margin: '6px auto 24px' }}>
+            Click "Execute Real-Time Trace" to begin automated forward hop traversal, peeling chain detection, and VASP deposit attribution.
+          </p>
+          <button className="btn btn-primary btn-lg" onClick={onRunTrace} style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
+            🚀 Execute Real-Time Trace
+          </button>
+        </div>
       </div>
     );
   }
@@ -441,10 +437,10 @@ export default function MoneyTrailVisualizer({
       <div className="canvas-stage-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-             Forensic Money-Trail Stage
+            Forensic Money-Trail Stage
           </span>
           <span className={`badge ${isAtNode0 ? 'badge-primary' : 'badge-info'}`}>
-            {isAtNode0 ? 'NODE 0: ORIGIN WALLET' : `HOP ${currentHop + 1} OF ${totalHops}`}
+            {isAtNode0 ? 'NODE 0: ORIGIN WALLET' : `HOP ${currentHop + 1} OF ${totalHops || 1}`}
           </span>
           <span style={{ fontSize: '0.725rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
             {Math.round(progress * 100)}% TRACED
@@ -541,6 +537,22 @@ export default function MoneyTrailVisualizer({
         >
           {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
+
+        {/* Scoped Graph Loading Overlay */}
+        <LoadingOverlay
+          active={loadingActive || tracing}
+          progress={loadingProgress}
+          stageMessage={loadingMessage || (tracing ? 'Traversing on-chain transaction trails across nodes...' : '')}
+          walletAddress={targetWallet || caseData?.wallets?.[0]?.wallet_address || caseData?.external_complaint_id || ''}
+          chain={targetChain || caseData?.wallets?.[0]?.chain || 'TRON'}
+          isError={isError}
+          onComplete={() => {
+            onLoadingComplete?.();
+            if (graphRef.current) {
+              graphRef.current.resize();
+            }
+          }}
+        />
       </div>
 
       {/* Scrubber & Controls Deck */}

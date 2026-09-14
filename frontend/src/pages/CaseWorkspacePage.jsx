@@ -5,7 +5,6 @@ import { useCase } from '../context/CaseContext';
 import { useAuth } from '../context/AuthContext';
 import MoneyTrailVisualizer from '../components/MoneyTrailVisualizer';
 import AnimatedNumber from '../components/AnimatedNumber';
-import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import api from '../lib/api';
 import { errorMessage, items, downloadBase64Pdf } from '../lib/contracts';
 
@@ -513,18 +512,7 @@ export default function CaseWorkspacePage() {
   };
 
   return (
-    <LoadingOverlay
-      active={overlayActive}
-      progress={overlayProgress}
-      stageMessage={overlayMessage}
-      walletAddress={overlayTargetWallet}
-      chain={overlayTargetChain}
-      isError={!!traceError || !!walletError}
-      onComplete={() => {
-        setOverlayActive(false);
-      }}
-    >
-      <motion.div className="workstation-container" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+    <motion.div className="workstation-container" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       {/* ── Command Bar ──────────────────────────────────────────────── */}
       <div className="workstation-command-bar">
         <div className="command-bar-left">
@@ -660,6 +648,15 @@ export default function CaseWorkspacePage() {
               currentHop={currentHop} setCurrentHop={setCurrentHop}
               isPlaying={isPlaying} setIsPlaying={setIsPlaying}
               onSelectNode={(id) => setSelectedNodeId(id)} selectedNodeId={selectedNodeId}
+              loadingActive={overlayActive}
+              loadingProgress={overlayProgress}
+              loadingMessage={overlayMessage}
+              targetWallet={overlayTargetWallet}
+              targetChain={overlayTargetChain}
+              isError={!!traceError || !!walletError}
+              onLoadingComplete={() => {
+                setOverlayActive(false);
+              }}
             />
 
             {structuredHops.length > 0 && (
@@ -1039,6 +1036,5 @@ export default function CaseWorkspacePage() {
         </div>
       )}
     </motion.div>
-    </LoadingOverlay>
   );
 }
