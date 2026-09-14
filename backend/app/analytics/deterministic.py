@@ -183,7 +183,9 @@ def evaluate(run: AnalysisRun, db: Session) -> tuple[list[dict[str, Any]], dict[
 
 
 def persist_evaluation(run: AnalysisRun, db: Session) -> RiskResult:
-    existing = db.execute(select(RiskResult).where(RiskResult.run_id == run.id, RiskResult.rule_version == POLICY_VERSION)).scalar_one_or_none()
+    existing = db.execute(select(RiskResult).where(
+        RiskResult.run_id == run.id, RiskResult.rule_version == POLICY_VERSION
+    ).order_by(RiskResult.revision.desc())).scalars().first()
     if existing:
         return existing
     findings, result = evaluate(run, db)

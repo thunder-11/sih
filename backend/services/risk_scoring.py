@@ -52,7 +52,7 @@ def predict_ml_wallet_risk(wallet_address: str, chain: str, db: Session) -> dict
     try:
         addr = db.execute(select(AddressRecord).where(
             AddressRecord.canonical_address == wallet_address
-        )).scalar_one_or_none()
+        )).scalars().first()
 
         in_txs = []
         out_txs = []

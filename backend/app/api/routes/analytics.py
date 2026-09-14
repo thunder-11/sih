@@ -54,7 +54,7 @@ def analyze_case(case_id: str, payload: AnalyticsRequest, db: Session = Depends(
     run = _run(case.id, payload.trace_id, db)
     existing = db.execute(select(RiskResult).where(
         RiskResult.run_id == run.id, RiskResult.rule_version == POLICY_VERSION
-    )).scalar_one_or_none()
+    ).order_by(RiskResult.revision.desc())).scalars().first()
     result = existing or persist_evaluation(run, db)
     from models import Case
     case_obj = db.get(Case, case.id)
@@ -80,7 +80,7 @@ def case_risk(case_id: str, trace_id: str | None = None, db: Session = Depends(g
                 "policy_version": POLICY_VERSION, "findings": [], "ml_predictions": []}
     result = db.execute(select(RiskResult).where(
         RiskResult.run_id == run.id, RiskResult.rule_version == POLICY_VERSION
-    )).scalar_one_or_none()
+    ).order_by(RiskResult.revision.desc())).scalars().first()
     if result is None:
         try:
             result = persist_evaluation(run, db)
