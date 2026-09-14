@@ -1,0 +1,567 @@
+{
+  "artifact": {
+    "path": "model.joblib",
+    "prediction_digest_decimals": 8,
+    "required_same_runtime_tolerance": 1e-06,
+    "sha256": "5c98116b941878a02756fd15528d9d9eea1b50a3ed007ae4bb8c6ff6e262aab6",
+    "test_prediction_sha256": "fead77dea95e8416a277cd18a6c6d36c2eaf8cf82260909a403ce4cdee1a026c"
+  },
+  "calibration": {
+    "intercept": -4.720757385926351,
+    "partition": "calibration",
+    "slope": 0.1651306456235589,
+    "version": "platt-sigmoid-v1"
+  },
+  "candidate_parameters": {
+    "logistic_regression": {
+      "classifier": {
+        "alpha": 0.0001,
+        "average": true,
+        "class_weight": "balanced",
+        "early_stopping": false,
+        "epsilon": 0.1,
+        "eta0": 0.01,
+        "fit_intercept": true,
+        "l1_ratio": 0.15,
+        "learning_rate": "optimal",
+        "loss": "log_loss",
+        "max_iter": 100,
+        "n_iter_no_change": 5,
+        "n_jobs": null,
+        "penalty": "l2",
+        "power_t": 0.5,
+        "random_state": 26183,
+        "shuffle": true,
+        "tol": 0.001,
+        "validation_fraction": 0.1,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "imputer": "median_with_missing_indicators",
+      "standard_scaler": true
+    }
+  },
+  "candidate_validation_average_precision": {
+    "logistic_regression": 0.20132497569148405
+  },
+  "chain": "BTC",
+  "completed_at": "2026-09-13T17:43:57.660555+00:00",
+  "dataset_audit": {
+    "class_counts": {
+      "calibration": {
+        "0": 26577,
+        "1": 2226
+      },
+      "test": {
+        "0": 59396,
+        "1": 2721
+      },
+      "train": {
+        "0": 134942,
+        "1": 6290
+      },
+      "validation": {
+        "0": 14269,
+        "1": 1594
+      }
+    },
+    "conflicting_wallet_labels_excluded": 0,
+    "feature_columns": [
+      "num_txs_as_sender",
+      "num_txs_as receiver",
+      "first_block_appeared_in",
+      "last_block_appeared_in",
+      "lifetime_in_blocks",
+      "total_txs",
+      "first_sent_block",
+      "first_received_block",
+      "num_timesteps_appeared_in",
+      "btc_transacted_total",
+      "btc_transacted_min",
+      "btc_transacted_max",
+      "btc_transacted_mean",
+      "btc_transacted_median",
+      "btc_sent_total",
+      "btc_sent_min",
+      "btc_sent_max",
+      "btc_sent_mean",
+      "btc_sent_median",
+      "btc_received_total",
+      "btc_received_min",
+      "btc_received_max",
+      "btc_received_mean",
+      "btc_received_median",
+      "fees_total",
+      "fees_min",
+      "fees_max",
+      "fees_mean",
+      "fees_median",
+      "fees_as_share_total",
+      "fees_as_share_min",
+      "fees_as_share_max",
+      "fees_as_share_mean",
+      "fees_as_share_median",
+      "blocks_btwn_txs_total",
+      "blocks_btwn_txs_min",
+      "blocks_btwn_txs_max",
+      "blocks_btwn_txs_mean",
+      "blocks_btwn_txs_median",
+      "blocks_btwn_input_txs_total",
+      "blocks_btwn_input_txs_min",
+      "blocks_btwn_input_txs_max",
+      "blocks_btwn_input_txs_mean",
+      "blocks_btwn_input_txs_median",
+      "blocks_btwn_output_txs_total",
+      "blocks_btwn_output_txs_min",
+      "blocks_btwn_output_txs_max",
+      "blocks_btwn_output_txs_mean",
+      "blocks_btwn_output_txs_median",
+      "num_addr_transacted_multiple",
+      "transacted_w_address_total",
+      "transacted_w_address_min",
+      "transacted_w_address_max",
+      "transacted_w_address_mean",
+      "transacted_w_address_median"
+    ],
+    "feature_policy": "Publisher-named wallet history fields at each wallet's final observed time step.",
+    "group_policy": "One final observation per public address; irreversible snapshot-scoped group IDs.",
+    "purge_steps": [
+      26,
+      33,
+      40
+    ],
+    "purged_known_rows": 17339,
+    "rows_with_known_labels": 248015,
+    "split_steps": {
+      "calibration": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "test": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "train": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "validation": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    "unknown_wallets_excluded": 557588
+  },
+  "dataset_file_hashes": {
+    "wallets_features_classes_combined.csv": "99bf27f7b76d6578ad59e0a61ec225ecd656fef6ae6958f29435ab286be2cc7d"
+  },
+  "dataset_snapshot_hash": "e9eca8bb82ccffb0056db55df872a4900acd23b6225b830d496c08598b930554",
+  "environment": {
+    "joblib": "1.5.3",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.3",
+    "scikit_learn": "1.8.0"
+  },
+  "experiment_version": "phase8-elliptic-plus-wallet-v1",
+  "feature_names": [
+    "num_txs_as_sender",
+    "num_txs_as receiver",
+    "first_block_appeared_in",
+    "last_block_appeared_in",
+    "lifetime_in_blocks",
+    "total_txs",
+    "first_sent_block",
+    "first_received_block",
+    "num_timesteps_appeared_in",
+    "btc_transacted_total",
+    "btc_transacted_min",
+    "btc_transacted_max",
+    "btc_transacted_mean",
+    "btc_transacted_median",
+    "btc_sent_total",
+    "btc_sent_min",
+    "btc_sent_max",
+    "btc_sent_mean",
+    "btc_sent_median",
+    "btc_received_total",
+    "btc_received_min",
+    "btc_received_max",
+    "btc_received_mean",
+    "btc_received_median",
+    "fees_total",
+    "fees_min",
+    "fees_max",
+    "fees_mean",
+    "fees_median",
+    "fees_as_share_total",
+    "fees_as_share_min",
+    "fees_as_share_max",
+    "fees_as_share_mean",
+    "fees_as_share_median",
+    "blocks_btwn_txs_total",
+    "blocks_btwn_txs_min",
+    "blocks_btwn_txs_max",
+    "blocks_btwn_txs_mean",
+    "blocks_btwn_txs_median",
+    "blocks_btwn_input_txs_total",
+    "blocks_btwn_input_txs_min",
+    "blocks_btwn_input_txs_max",
+    "blocks_btwn_input_txs_mean",
+    "blocks_btwn_input_txs_median",
+    "blocks_btwn_output_txs_total",
+    "blocks_btwn_output_txs_min",
+    "blocks_btwn_output_txs_max",
+    "blocks_btwn_output_txs_mean",
+    "blocks_btwn_output_txs_median",
+    "num_addr_transacted_multiple",
+    "transacted_w_address_total",
+    "transacted_w_address_min",
+    "transacted_w_address_max",
+    "transacted_w_address_mean",
+    "transacted_w_address_median"
+  ],
+  "feature_schema_version": "elliptic-plus-wallet-public-v1",
+  "latency": {
+    "batch_size": 1000,
+    "median_ms_per_sample": 0.002017400001932401,
+    "p95_ms_per_sample": 0.0032919150107773064,
+    "runs": 20
+  },
+  "manifest_sha256": "aacca0c3f61eb782c7c7d2980945889ae51485f4d85ee167cfb00f4535354e1e",
+  "metrics": {
+    "logistic_final_test": {
+      "alerts_per_1000": 364.8115652719867,
+      "average_precision": 0.07035204214813315,
+      "brier": 0.04349991219064889,
+      "calibration_bins": [
+        {
+          "absolute_error": 0.04400495675617098,
+          "count": 6212,
+          "mean_probability": 0.00042517846597970026,
+          "positive_rate": 0.044430135222150675
+        },
+        {
+          "absolute_error": 0.013411050434797211,
+          "count": 6212,
+          "mean_probability": 0.0009160583868383337,
+          "positive_rate": 0.014327108821635544
+        },
+        {
+          "absolute_error": 0.004284533385127448,
+          "count": 6212,
+          "mean_probability": 0.005733342142371492,
+          "positive_rate": 0.0014488087572440437
+        },
+        {
+          "absolute_error": 0.006568935989562548,
+          "count": 6212,
+          "mean_probability": 0.010110468507270211,
+          "positive_rate": 0.0035415325177076628
+        },
+        {
+          "absolute_error": 0.0035983582195609487,
+          "count": 6212,
+          "mean_probability": 0.013900998271074149,
+          "positive_rate": 0.0103026400515132
+        },
+        {
+          "absolute_error": 0.020931192470648695,
+          "count": 6212,
+          "mean_probability": 0.02929417778047816,
+          "positive_rate": 0.050225370251126854
+        },
+        {
+          "absolute_error": 0.02707432010335971,
+          "count": 6212,
+          "mean_probability": 0.12591527309756448,
+          "positive_rate": 0.09884095299420477
+        },
+        {
+          "absolute_error": 0.0797928363719438,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.07744324585412977
+        },
+        {
+          "absolute_error": 0.08011484571021461,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.07712123651585896
+        },
+        {
+          "absolute_error": 0.09685933130029672,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.06037675092577685
+        }
+      ],
+      "calibration_ece": 0.037661721491925725,
+      "false_positive_rate": 0.35249848474644757,
+      "log_loss": 0.19646575107596428,
+      "negatives": 59396,
+      "positives": 2721,
+      "precision": 0.07607784299015931,
+      "precision_at_k": 0.05,
+      "precision_group_bootstrap_95": {
+        "groups": 2000,
+        "lower_95": 0.06055253623188406,
+        "upper_95": 0.10041914294651234
+      },
+      "prevalence": 0.043804433568910284,
+      "prevalence_baseline": {
+        "average_precision": 0.043804433568910284,
+        "brier": 0.04188560516861722,
+        "log_loss": 0.179851850337899
+      },
+      "recall": 0.63359059169423,
+      "recall_at_k": 0.0018375597206909224,
+      "samples": 62117,
+      "threshold": 0.1102508786910398
+    },
+    "selected_final_test": {
+      "alerts_per_1000": 364.8115652719867,
+      "average_precision": 0.07035204214813315,
+      "brier": 0.04349991219064889,
+      "calibration_bins": [
+        {
+          "absolute_error": 0.04400495675617098,
+          "count": 6212,
+          "mean_probability": 0.00042517846597970026,
+          "positive_rate": 0.044430135222150675
+        },
+        {
+          "absolute_error": 0.013411050434797211,
+          "count": 6212,
+          "mean_probability": 0.0009160583868383337,
+          "positive_rate": 0.014327108821635544
+        },
+        {
+          "absolute_error": 0.004284533385127448,
+          "count": 6212,
+          "mean_probability": 0.005733342142371492,
+          "positive_rate": 0.0014488087572440437
+        },
+        {
+          "absolute_error": 0.006568935989562548,
+          "count": 6212,
+          "mean_probability": 0.010110468507270211,
+          "positive_rate": 0.0035415325177076628
+        },
+        {
+          "absolute_error": 0.0035983582195609487,
+          "count": 6212,
+          "mean_probability": 0.013900998271074149,
+          "positive_rate": 0.0103026400515132
+        },
+        {
+          "absolute_error": 0.020931192470648695,
+          "count": 6212,
+          "mean_probability": 0.02929417778047816,
+          "positive_rate": 0.050225370251126854
+        },
+        {
+          "absolute_error": 0.02707432010335971,
+          "count": 6212,
+          "mean_probability": 0.12591527309756448,
+          "positive_rate": 0.09884095299420477
+        },
+        {
+          "absolute_error": 0.0797928363719438,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.07744324585412977
+        },
+        {
+          "absolute_error": 0.08011484571021461,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.07712123651585896
+        },
+        {
+          "absolute_error": 0.09685933130029672,
+          "count": 6211,
+          "mean_probability": 0.15723608222607358,
+          "positive_rate": 0.06037675092577685
+        }
+      ],
+      "calibration_ece": 0.037661721491925725,
+      "false_positive_rate": 0.35249848474644757,
+      "log_loss": 0.19646575107596428,
+      "negatives": 59396,
+      "positives": 2721,
+      "precision": 0.07607784299015931,
+      "precision_at_k": 0.05,
+      "precision_group_bootstrap_95": {
+        "groups": 2000,
+        "lower_95": 0.06055253623188406,
+        "upper_95": 0.10041914294651234
+      },
+      "prevalence": 0.043804433568910284,
+      "prevalence_baseline": {
+        "average_precision": 0.043804433568910284,
+        "brier": 0.04188560516861722,
+        "log_loss": 0.179851850337899
+      },
+      "recall": 0.63359059169423,
+      "recall_at_k": 0.0018375597206909224,
+      "samples": 62117,
+      "threshold": 0.1102508786910398
+    }
+  },
+  "promotion_prohibited": true,
+  "promotion_reasons": [
+    "precision_point",
+    "precision_lower_95",
+    "average_precision_above_logistic",
+    "brier_not_degraded",
+    "log_loss_not_degraded",
+    "license_verified",
+    "labels_dual_reviewed"
+  ],
+  "quality_gates": {
+    "checks": {
+      "average_precision_above_logistic": false,
+      "average_precision_above_prevalence": true,
+      "brier_not_degraded": false,
+      "calibration_ece": true,
+      "labels_dual_reviewed": false,
+      "license_verified": false,
+      "log_loss_not_degraded": false,
+      "minimum_gold_test_samples": true,
+      "precision_lower_95": false,
+      "precision_point": false,
+      "recall_point": true
+    },
+    "failed": [
+      "precision_point",
+      "precision_lower_95",
+      "average_precision_above_logistic",
+      "brier_not_degraded",
+      "log_loss_not_degraded",
+      "license_verified",
+      "labels_dual_reviewed"
+    ],
+    "passed": false,
+    "state": "shadow"
+  },
+  "rolling_origin": {
+    "status": "deferred_for_lightweight_prototype"
+  },
+  "seed": 26183,
+  "selected_model": "logistic_regression",
+  "selection_rule": "Phase 8 prototype uses the fixed logistic-regression baseline only",
+  "split_protocol": {
+    "frozen_before_evaluation": true,
+    "steps": {
+      "calibration": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "test": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "train": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "validation": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    }
+  },
+  "state": "shadow",
+  "target": "publisher-labelled illicit wallet versus licit wallet",
+  "task": "wallet_risk",
+  "temporal_mode": "retrospective_context",
+  "threshold_selection": {
+    "calibrated_threshold": 0.1102508786910398,
+    "minimum_recall": 0.6,
+    "partition": "validation",
+    "raw": {
+      "alerts": 4862,
+      "precision": 0.22274784039489923,
+      "recall": 0.679422835633626,
+      "threshold": 0.9999998807907104
+    }
+  }
+}

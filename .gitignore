@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Build and distribution
+dist/
+dist-ssr/
+build/
+*.egg-info/
+
+# Databases & WAL files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+cfas.db
+
+# Large dataset files (>100MB blocked by GitHub)
+backend/data/external/
+*.csv
+
+# Logs & temp files
+*.log
+logs/
+.pytest_cache/
+.claude/
+.DS_Store
+
+# Environment & local settings
+.env.local
+.vscode/
+!.vscode/extensions.json

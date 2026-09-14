@@ -1,0 +1,494 @@
+{
+  "artifact": {
+    "path": "model.joblib",
+    "prediction_digest_decimals": 8,
+    "required_same_runtime_tolerance": 1e-06,
+    "sha256": "0c2dfbbc3024d8856f32cc82ed4e32b16e85b413e7e8959311870b0369cf67a3",
+    "test_prediction_sha256": "11f7ae1be61152f95fd5c9bc10ff89d8646bc0c8926b84d09835625e22d96796"
+  },
+  "calibration": {
+    "intercept": -2.4733981800812863,
+    "partition": "calibration",
+    "slope": 0.033308587953898766,
+    "version": "platt-sigmoid-v1"
+  },
+  "candidate_parameters": {
+    "logistic_regression": {
+      "classifier": {
+        "alpha": 0.0001,
+        "average": true,
+        "class_weight": "balanced",
+        "early_stopping": false,
+        "epsilon": 0.1,
+        "eta0": 0.01,
+        "fit_intercept": true,
+        "l1_ratio": 0.15,
+        "learning_rate": "optimal",
+        "loss": "log_loss",
+        "max_iter": 100,
+        "n_iter_no_change": 5,
+        "n_jobs": null,
+        "penalty": "l2",
+        "power_t": 0.5,
+        "random_state": 26183,
+        "shuffle": true,
+        "tol": 0.001,
+        "validation_fraction": 0.1,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "imputer": "median_with_missing_indicators",
+      "standard_scaler": true
+    }
+  },
+  "candidate_validation_average_precision": {
+    "logistic_regression": 0.22637767156930608
+  },
+  "chain": "BTC",
+  "completed_at": "2026-09-13T17:31:54.960008+00:00",
+  "dataset_audit": {
+    "class_counts": {
+      "calibration": {
+        "0": 5517,
+        "1": 484
+      },
+      "test": {
+        "0": 9449,
+        "1": 524
+      },
+      "train": {
+        "0": 21863,
+        "1": 2337
+      },
+      "validation": {
+        "0": 3252,
+        "1": 969
+      }
+    },
+    "feature_columns": [
+      "in_txs_degree",
+      "out_txs_degree",
+      "total_BTC",
+      "fees",
+      "size",
+      "num_input_addresses",
+      "num_output_addresses",
+      "in_BTC_min",
+      "in_BTC_max",
+      "in_BTC_mean",
+      "in_BTC_median",
+      "in_BTC_total",
+      "out_BTC_min",
+      "out_BTC_max",
+      "out_BTC_mean",
+      "out_BTC_median",
+      "out_BTC_total"
+    ],
+    "feature_policy": "Only the 17 publisher-named transaction fields are used; anonymous local/aggregate fields are excluded.",
+    "group_policy": "Each time step is an isolated transaction-graph component and belongs to exactly one split.",
+    "purge_steps": [
+      26,
+      33,
+      40
+    ],
+    "purged_known_rows": 2169,
+    "rows_with_known_labels": 44395,
+    "split_steps": {
+      "calibration": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "test": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "train": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "validation": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    "unknown_labels_excluded": 157205
+  },
+  "dataset_file_hashes": {
+    "txs_classes.csv": "013a11742969071a906878ded0319571df0657f9b7133e5c6cdb36217bf0d240",
+    "txs_edgelist.csv": "a35053ba68a98e4382cae2ba65b9d9e36b23b6439e02dff084971b1b72a5156e",
+    "txs_features.csv": "2db326ec8ddb68f1d810c1834e1ff62e0a8300378f0984a1e3b2ca82a439821b"
+  },
+  "dataset_snapshot_hash": "6a4129cc447177295c54432e8068bf48e0661ed7c8b84fa8c6f10454643d2933",
+  "environment": {
+    "joblib": "1.5.3",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.3",
+    "scikit_learn": "1.8.0"
+  },
+  "experiment_version": "phase8-elliptic-plus-transfer-v1",
+  "feature_names": [
+    "in_txs_degree",
+    "out_txs_degree",
+    "total_BTC",
+    "fees",
+    "size",
+    "num_input_addresses",
+    "num_output_addresses",
+    "in_BTC_min",
+    "in_BTC_max",
+    "in_BTC_mean",
+    "in_BTC_median",
+    "in_BTC_total",
+    "out_BTC_min",
+    "out_BTC_max",
+    "out_BTC_mean",
+    "out_BTC_median",
+    "out_BTC_total"
+  ],
+  "feature_schema_version": "elliptic-plus-transaction-public-v1",
+  "latency": {
+    "batch_size": 1000,
+    "median_ms_per_sample": 0.0038822499991510995,
+    "p95_ms_per_sample": 0.004743370006326586,
+    "runs": 20
+  },
+  "manifest_sha256": "07337749bc36b914392d5bb1fef64c57b2f7a2a283fa40485c90284bf091a786",
+  "metrics": {
+    "logistic_final_test": {
+      "alerts_per_1000": 774.691667502256,
+      "average_precision": 0.06697211795919181,
+      "brier": 0.05115100103145414,
+      "calibration_bins": [
+        {
+          "absolute_error": 0.05036122453938682,
+          "count": 998,
+          "mean_probability": 0.051363228547402856,
+          "positive_rate": 0.001002004008016032
+        },
+        {
+          "absolute_error": 0.06988546516508534,
+          "count": 998,
+          "mean_probability": 0.07188947318111741,
+          "positive_rate": 0.002004008016032064
+        },
+        {
+          "absolute_error": 0.03582196116140504,
+          "count": 998,
+          "mean_probability": 0.07790612949807839,
+          "positive_rate": 0.04208416833667335
+        },
+        {
+          "absolute_error": 0.022821272971251375,
+          "count": 997,
+          "mean_probability": 0.08099579654196351,
+          "positive_rate": 0.058174523570712136
+        },
+        {
+          "absolute_error": 0.04127384711239113,
+          "count": 997,
+          "mean_probability": 0.08340022624980337,
+          "positive_rate": 0.04212637913741224
+        },
+        {
+          "absolute_error": 0.05741570336290718,
+          "count": 997,
+          "mean_probability": 0.08650296514826325,
+          "positive_rate": 0.029087261785356068
+        },
+        {
+          "absolute_error": 0.01106781545626262,
+          "count": 997,
+          "mean_probability": 0.08829951054151838,
+          "positive_rate": 0.07723169508525576
+        },
+        {
+          "absolute_error": 0.08717214309753706,
+          "count": 997,
+          "mean_probability": 0.09136346372292432,
+          "positive_rate": 0.17853560682046138
+        },
+        {
+          "absolute_error": 0.0125053541248943,
+          "count": 997,
+          "mean_probability": 0.10277616656220624,
+          "positive_rate": 0.09027081243731194
+        },
+        {
+          "absolute_error": 0.12893182016576835,
+          "count": 997,
+          "mean_probability": 0.13394686530117456,
+          "positive_rate": 0.0050150451354062184
+        }
+      ],
+      "calibration_ece": 0.05172575012396313,
+      "false_positive_rate": 0.7628320457191237,
+      "log_loss": 0.2134592682030555,
+      "negatives": 9449,
+      "positives": 524,
+      "precision": 0.06704633704374838,
+      "precision_at_k": 0.0,
+      "precision_group_bootstrap_95": {
+        "groups": 9,
+        "lower_95": 0.026271091192627043,
+        "upper_95": 0.10653291646684072
+      },
+      "prevalence": 0.05254186303018149,
+      "prevalence_baseline": {
+        "average_precision": 0.05254186303018149,
+        "brier": 0.04978121565949914,
+        "log_loss": 0.20593265752357068
+      },
+      "recall": 0.9885496183206107,
+      "recall_at_k": 0.0,
+      "samples": 9973,
+      "threshold": 0.07698266361121663
+    },
+    "selected_final_test": {
+      "alerts_per_1000": 774.691667502256,
+      "average_precision": 0.06697211795919181,
+      "brier": 0.05115100103145414,
+      "calibration_bins": [
+        {
+          "absolute_error": 0.05036122453938682,
+          "count": 998,
+          "mean_probability": 0.051363228547402856,
+          "positive_rate": 0.001002004008016032
+        },
+        {
+          "absolute_error": 0.06988546516508534,
+          "count": 998,
+          "mean_probability": 0.07188947318111741,
+          "positive_rate": 0.002004008016032064
+        },
+        {
+          "absolute_error": 0.03582196116140504,
+          "count": 998,
+          "mean_probability": 0.07790612949807839,
+          "positive_rate": 0.04208416833667335
+        },
+        {
+          "absolute_error": 0.022821272971251375,
+          "count": 997,
+          "mean_probability": 0.08099579654196351,
+          "positive_rate": 0.058174523570712136
+        },
+        {
+          "absolute_error": 0.04127384711239113,
+          "count": 997,
+          "mean_probability": 0.08340022624980337,
+          "positive_rate": 0.04212637913741224
+        },
+        {
+          "absolute_error": 0.05741570336290718,
+          "count": 997,
+          "mean_probability": 0.08650296514826325,
+          "positive_rate": 0.029087261785356068
+        },
+        {
+          "absolute_error": 0.01106781545626262,
+          "count": 997,
+          "mean_probability": 0.08829951054151838,
+          "positive_rate": 0.07723169508525576
+        },
+        {
+          "absolute_error": 0.08717214309753706,
+          "count": 997,
+          "mean_probability": 0.09136346372292432,
+          "positive_rate": 0.17853560682046138
+        },
+        {
+          "absolute_error": 0.0125053541248943,
+          "count": 997,
+          "mean_probability": 0.10277616656220624,
+          "positive_rate": 0.09027081243731194
+        },
+        {
+          "absolute_error": 0.12893182016576835,
+          "count": 997,
+          "mean_probability": 0.13394686530117456,
+          "positive_rate": 0.0050150451354062184
+        }
+      ],
+      "calibration_ece": 0.05172575012396313,
+      "false_positive_rate": 0.7628320457191237,
+      "log_loss": 0.2134592682030555,
+      "negatives": 9449,
+      "positives": 524,
+      "precision": 0.06704633704374838,
+      "precision_at_k": 0.0,
+      "precision_group_bootstrap_95": {
+        "groups": 9,
+        "lower_95": 0.026271091192627043,
+        "upper_95": 0.10653291646684072
+      },
+      "prevalence": 0.05254186303018149,
+      "prevalence_baseline": {
+        "average_precision": 0.05254186303018149,
+        "brier": 0.04978121565949914,
+        "log_loss": 0.20593265752357068
+      },
+      "recall": 0.9885496183206107,
+      "recall_at_k": 0.0,
+      "samples": 9973,
+      "threshold": 0.07698266361121663
+    }
+  },
+  "promotion_prohibited": true,
+  "promotion_reasons": [
+    "precision_point",
+    "precision_lower_95",
+    "average_precision_above_logistic",
+    "calibration_ece",
+    "brier_not_degraded",
+    "log_loss_not_degraded",
+    "license_verified",
+    "labels_dual_reviewed"
+  ],
+  "quality_gates": {
+    "checks": {
+      "average_precision_above_logistic": false,
+      "average_precision_above_prevalence": true,
+      "brier_not_degraded": false,
+      "calibration_ece": false,
+      "labels_dual_reviewed": false,
+      "license_verified": false,
+      "log_loss_not_degraded": false,
+      "minimum_gold_test_samples": true,
+      "precision_lower_95": false,
+      "precision_point": false,
+      "recall_point": true
+    },
+    "failed": [
+      "precision_point",
+      "precision_lower_95",
+      "average_precision_above_logistic",
+      "calibration_ece",
+      "brier_not_degraded",
+      "log_loss_not_degraded",
+      "license_verified",
+      "labels_dual_reviewed"
+    ],
+    "passed": false,
+    "state": "shadow"
+  },
+  "rolling_origin": {
+    "status": "deferred_for_lightweight_prototype"
+  },
+  "seed": 26183,
+  "selected_model": "logistic_regression",
+  "selection_rule": "Phase 8 prototype uses the fixed logistic-regression baseline only",
+  "split_protocol": {
+    "frozen_before_evaluation": true,
+    "steps": {
+      "calibration": [
+        34,
+        35,
+        36,
+        37,
+        38,
+        39
+      ],
+      "test": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "train": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25
+      ],
+      "validation": [
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    }
+  },
+  "state": "shadow",
+  "target": "publisher-labelled illicit transaction versus licit transaction",
+  "task": "transfer_risk",
+  "temporal_mode": "retrospective_context",
+  "threshold_selection": {
+    "calibrated_threshold": 0.07698266361121663,
+    "minimum_recall": 0.6,
+    "partition": "validation",
+    "raw": {
+      "alerts": 2760,
+      "precision": 0.29057971014492756,
+      "recall": 0.8276573787409701,
+      "threshold": 0.42059643615337633
+    }
+  }
+}

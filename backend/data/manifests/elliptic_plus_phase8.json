@@ -1,0 +1,52 @@
+{
+  "version": "elliptic-plus-independent-acquisition-2026-09-13",
+  "source_name": "Elliptic++ Dataset",
+  "source_kind": "public_research",
+  "owner": "Youssef Elmougy and Ling Liu, Georgia Institute of Technology",
+  "publisher_repository": "https://github.com/git-disl/EllipticPlusPlus",
+  "source_uri": "https://drive.google.com/drive/folders/1MRPXz79Lu_JGLlJ21MDfML44dKN9R08l",
+  "citation_doi": "https://doi.org/10.1145/3580305.3599803",
+  "acquired_at": "2026-09-13T00:00:00+05:30",
+  "collection_method": "fresh direct download from publisher-linked public Google Drive folder",
+  "independently_acquired": true,
+  "license_name": "not stated in publisher repository; legal review required",
+  "permitted_purpose": "exploratory research and shadow evaluation only",
+  "chains": [
+    "BTC"
+  ],
+  "tasks": [
+    "transfer_risk",
+    "wallet_risk"
+  ],
+  "temporal_mode": "retrospective_context",
+  "files": {
+    "txs_classes.csv": {
+      "google_drive_id": "1DiBxn8TXdbJqoSw58pYUeaqO3oOKhuQO",
+      "bytes": 2361914,
+      "sha256": "013a11742969071a906878ded0319571df0657f9b7133e5c6cdb36217bf0d240"
+    },
+    "txs_edgelist.csv": {
+      "google_drive_id": "1Q2yG_CIDvfdGP-fKVPSw979EYgQukjz5",
+      "bytes": 4470584,
+      "sha256": "a35053ba68a98e4382cae2ba65b9d9e36b23b6439e02dff084971b1b72a5156e"
+    },
+    "txs_features.csv": {
+      "google_drive_id": "19q09IFhfkOOBOXvn_dKhWjILJtjCcsjc",
+      "bytes": 694789588,
+      "sha256": "2db326ec8ddb68f1d810c1834e1ff62e0a8300378f0984a1e3b2ca82a439821b"
+    },
+    "wallets_features_classes_combined.csv": {
+      "google_drive_id": "1YLCIn8rPAh4FjKiZynblU2rLx-Fxr2WA",
+      "bytes": 609000048,
+      "sha256": "99bf27f7b76d6578ad59e0a61ec225ecd656fef6ae6958f29435ab286be2cc7d"
+    }
+  },
+  "quality_limits": [
+    "The publisher repository does not state an explicit dataset license.",
+    "Publisher labels are not locally dual-reviewed gold labels.",
+    "Time is represented by 49 ordinal snapshots rather than exact event timestamps.",
+    "The dataset covers Bitcoin only and cannot support multichain claims.",
+    "Models and metrics must remain research/shadow-only until all promotion gates pass."
+  ],
+  "raw_data_policy": "Raw files are git-ignored and must not be redistributed from this repository."
+}
