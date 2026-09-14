@@ -164,6 +164,16 @@ def process_trace_job(session: Session, *, settings: Settings, job: BackgroundJo
             continue
 
         hop_attempts += 1
+        # Demo/fixture addresses are already seeded by _ensure_trace_trail above.
+        # Calling the live provider on them would always fail (fake addresses).
+        _is_demo_address = (
+            address.canonical_address.startswith("TDEMO_")
+            or address.canonical_address.startswith("0xDEMO_")
+            or address.canonical_address.startswith("DEMO_")
+        )
+        if _is_demo_address:
+            # Count as a successful hop — data already exists in the DB.
+            continue
         try:
             result = ingest_wallet_page(session, settings=settings, chain=address.chain, address=address.canonical_address)
         except ProviderError:

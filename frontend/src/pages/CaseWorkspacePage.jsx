@@ -174,7 +174,16 @@ export default function CaseWorkspacePage() {
   const pollTrace = useCallback((traceId, specificCaseId) => {
     const cid = specificCaseId || targetCaseId;
     if (pollingRef.current) clearInterval(pollingRef.current);
+    let pollCount = 0;
+    const MAX_POLLS = 120; // 120 × 600ms ≈ 72 seconds max
     pollingRef.current = setInterval(async () => {
+      pollCount++;
+      if (pollCount > MAX_POLLS) {
+        clearInterval(pollingRef.current); pollingRef.current = null;
+        setTraceStatus('error');
+        setTraceError('Trace timed out. The provider may be unavailable — please try again.');
+        return;
+      }
       try {
         const res = await api.get(`/api/v1/traces/${traceId}`);
         const state = (res.data?.state || res.data?.status || '').toLowerCase();
@@ -188,12 +197,14 @@ export default function CaseWorkspacePage() {
         } else if (['failed', 'error'].includes(state)) {
           clearInterval(pollingRef.current); pollingRef.current = null;
           setTraceStatus('error');
-          setTraceError(res.data?.error_message || 'Trace failed on the backend.');
+          setTraceError(res.data?.error_message || res.data?.error || 'Trace failed on the backend.');
         }
+        // 'retrying', 'running', 'queued' → keep polling
       } catch { /* keep polling */ }
     }, 600);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetCaseId, reloadActiveCase, reloadCasesList]);
+
 
   useEffect(() => () => { if (pollingRef.current) clearInterval(pollingRef.current); }, []);
 
