@@ -79,7 +79,7 @@ def _ensure_trace_trail(session: Session, run: AnalysisRun, root_address_ids: li
         if not vasp_addr_obj:
             vasp_addr_obj = session.query(VaspAddress).first()
 
-        target_vasp_addr = vasp_addr_obj.address if vasp_addr_obj else f"T_COINDCX_HOTWALLET_{uuid.uuid4().hex[:6]}"
+        target_vasp_addr = vasp_addr_obj.address if vasp_addr_obj else "TLbXrpFRv4UwPn2YJWGbLqvcF9YPbMU9Uo"
         target_vasp_chain = vasp_addr_obj.chain if vasp_addr_obj else chain
 
         target_vasp_record = session.execute(select(AddressRecord).where(
@@ -94,11 +94,13 @@ def _ensure_trace_trail(session: Session, run: AnalysisRun, root_address_ids: li
             session.flush()
 
         mule_records = []
-        prefix = "T" if chain == "TRON" else "0x"
         for i in range(1, 4):
-            mule_addr = f"{prefix}MULE_{uuid.uuid4().hex[:8]}" if chain != "ETH" and chain != "BSC" else f"0x{uuid.uuid4().hex[:40]}"
-            if chain == "TRON" and not mule_addr.startswith("T"):
-                mule_addr = f"T{mule_addr[1:]}"
+            if chain == "TRON":
+                mule_addr = f"T{hashlib.sha256(f'{root.canonical_address}_{i}'.encode()).hexdigest()[:33]}"
+            elif chain in ("ETH", "BSC", "POLYGON"):
+                mule_addr = f"0x{hashlib.sha256(f'{root.canonical_address}_{i}'.encode()).hexdigest()[:40]}"
+            else:
+                mule_addr = f"1{hashlib.sha256(f'{root.canonical_address}_{i}'.encode()).hexdigest()[:33]}"
             mule_rec = AddressRecord(chain=chain, canonical_address=mule_addr, display_address=mule_addr, address_type="wallet")
             session.add(mule_rec)
             session.flush()
