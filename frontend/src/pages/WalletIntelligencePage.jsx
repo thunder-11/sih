@@ -6,7 +6,7 @@ import { items, errorMessage, formatAmount } from '../lib/contracts';
 
 export default function WalletIntelligencePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { activeCaseId, casesList, selectCase } = useCase();
+  const { activeCaseId, activeCase, casesList, selectCase } = useCase();
   const [address, setAddress] = useState(searchParams.get('address') || '');
   const [chain, setChain] = useState(searchParams.get('chain') || '');
   const [transfers, setTransfers] = useState([]);

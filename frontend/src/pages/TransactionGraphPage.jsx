@@ -141,7 +141,7 @@ const LEGEND = [
 export default function TransactionGraphPage() {
   const [searchParams] = useSearchParams();
   const caseIdFromUrl = searchParams.get('case');
-  const { activeCaseId, activeCase, activeGraph, casesList, selectCase, graphFilters, setGraphFilters, graphState, caseError, reloadActiveCase } = useCase();
+  const { activeCaseId, activeCase, activeGraph, casesList, loadingCase, selectCase, graphFilters, setGraphFilters, graphState, caseError, reloadActiveCase } = useCase();
   const navigate = useNavigate();
 
   const [nodeStyle, setNodeStyleState] = useState('circular');
